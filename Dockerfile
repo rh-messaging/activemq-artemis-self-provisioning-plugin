@@ -37,7 +37,7 @@ COPY --from=BUILD_IMAGE /usr/src/app/http-server.sh ./http-server.sh
 ENTRYPOINT [ "./http-server.sh", "./dist" ]
 
 ## Labels
-LABEL name="artemiscloud/activemq-artemis-self-provisioning-plugin"
-LABEL description="ActiveMQ Artemis Self Provisioning Plugin"
+LABEL name="amq-broker-7/amq-broker-712-self-provisioning-plugin-rhel8"
+LABEL description="Red Hat AMQ 7.12 Self Provisioning Plugin"
 LABEL maintainer="Ajay Pratap <apratap@redhat.com>"
-LABEL version="0.0.1"
+LABEL version="7.12.0"
