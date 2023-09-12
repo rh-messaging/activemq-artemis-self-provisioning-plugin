@@ -37,12 +37,12 @@ COPY --from=BUILD_IMAGE /usr/src/app/http-server.sh ./http-server.sh
 ENTRYPOINT [ "./http-server.sh", "./dist" ]
 
 ## Labels
-LABEL name="amq-broker-7/amq-broker-self-provisioning-plugin-rhel8-container"
-LABEL description="Red Hat AMQ 7.12.0 Self Provisioning Plugin"
+LABEL name="amq-broker-7/amq-broker-712-self-provisioning-plugin-rhel8"
+LABEL description="Red Hat AMQ 7.12 Self Provisioning Plugin"
 LABEL maintainer="Ajay Pratap <apratap@redhat.com>"
 LABEL version="7.12.0"
-LABEL summary="Red Hat AMQ 7.12.0 Self Provisioning Plugin"
+LABEL summary="Red Hat AMQ 7.12 Self Provisioning Plugin"
 LABEL amq.broker.version="7.12.0.SPP.1.ER1"
 LABEL com.redhat.component="amq-broker-self-provisioning-plugin-rhel8-container"
-LABEL io.k8s.display-name="Red Hat AMQ 7.12.0 Self Provisioning Plugin"
+LABEL io.k8s.display-name="Red Hat AMQ SPP.1 Self Provisioning Plugin"
 LABEL io.openshift.tags="messaging,amq,integration"
