@@ -24,7 +24,7 @@ RUN yarn install  --network-timeout 1000000
 ## Build application
 RUN yarn build
 
-FROM registry.access.redhat.com/ubi8/nodejs-16-minimal@sha256:705f349314ffdf2e62e2a800b4e7023cbd33dcb4934587d143c8a6cd0986f400@sha256:705f349314ffdf2e62e2a800b4e7023cbd33dcb4934587d143c8a6cd0986f400@sha256:705f349314ffdf2e62e2a800b4e7023cbd33dcb4934587d143c8a6cd0986f400@sha256:705f349314ffdf2e62e2a800b4e7023cbd33dcb4934587d143c8a6cd0986f400@sha256:705f349314ffdf2e62e2a800b4e7023cbd33dcb4934587d143c8a6cd0986f400
+FROM registry.access.redhat.com/ubi8/nodejs-16-minimal@sha256:705f349314ffdf2e62e2a800b4e7023cbd33dcb4934587d143c8a6cd0986f400
 
 USER 1001
 
