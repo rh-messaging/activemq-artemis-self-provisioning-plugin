@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi8/nodejs-16@sha256:859ad7def6dc1d40987cb9ab9795c266316b6a7b62710f2898fe3fa8fcfd0bc4 AS BUILD_IMAGE
+FROM registry-proxy.engineering.redhat.com/rh-osbs/rhacm2-yarn-builder@ AS BUILD_IMAGE
 
 ### BEGIN REMOTE SOURCE
 # Use the COPY instruction only inside the REMOTE SOURCE block
