@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi8/nodejs-16@sha256:3116913de59e6d17e40282a7924104ef835a1868cc142dd6cbb0d93f6b268bb1 AS BUILD_IMAGE
+FROM registry-proxy.engineering.redhat.com/rh-osbs/rhacm2-yarn-builder@sha256:4f578a4e083bedd7467643b26bedf284f2d1062ed22416662d3556a3f4482cb1 AS BUILD_IMAGE
 
 ### BEGIN REMOTE SOURCE
 # Use the COPY instruction only inside the REMOTE SOURCE block
@@ -26,7 +26,7 @@ RUN yarn install --network-timeout 1000000
 ## Build application
 RUN yarn build
 
-FROM registry.access.redhat.com/ubi8/nodejs-16-minimal@sha256:705f349314ffdf2e62e2a800b4e7023cbd33dcb4934587d143c8a6cd0986f400
+FROM registry.access.redhat.com/ubi8/nodejs-16-minimal@sha256:9bae66782fb78a155af4a7515127bc1ad45f922fea11d80b65839ed24797b60a
 
 USER 1001
 
