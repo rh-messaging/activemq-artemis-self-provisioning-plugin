@@ -37,11 +37,11 @@ COPY --from=BUILD_IMAGE /usr/src/app/dist /usr/share/nginx/html
 CMD ["nginx", "-g", "daemon off;"]
 
 ## Labels
-LABEL name="amq-broker-7/amq-broker-7x-self-provisioning-plugin-rhel8"
-LABEL description="Red Hat AMQ 7.x Self Provisioning Plugin"
+LABEL name="amq-broker-7/amq-broker-712-self-provisioning-plugin-rhel8"
+LABEL description="Red Hat AMQ 7.12 Self Provisioning Plugin"
 LABEL maintainer="Roderick Kieley <rkieley@redhat.com>"
-LABEL version="7.x"LABEL summary="Red Hat AMQ 7.x Self Provisioning Plugin"
-LABEL amq.broker.version="7.x.x.SPP.1.ER1"
+LABEL version="7.12.0"
+LABEL amq.broker.version="7.12.0.SPP.1.ER1"
 LABEL com.redhat.component="amq-broker-self-provisioning-plugin-rhel8-container"
 LABEL io.k8s.display-name="Red Hat AMQ SPP.1 Self Provisioning Plugin"
 LABEL io.openshift.tags="messaging,amq,integration"
