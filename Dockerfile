@@ -1,4 +1,4 @@
-FROM registry-proxy.engineering.redhat.com/rh-osbs/rhacm2-yarn-builder@sha256:4f578a4e083bedd7467643b26bedf284f2d1062ed22416662d3556a3f4482cb1 AS BUILD_IMAGE
+FROM registry.access.redhat.com/ubi8/nodejs-16:latest AS BUILD_IMAGE
 
 ### BEGIN REMOTE SOURCE
 # Use the COPY instruction only inside the REMOTE SOURCE block
@@ -37,11 +37,7 @@ COPY --from=BUILD_IMAGE /usr/src/app/dist /usr/share/nginx/html
 CMD ["nginx", "-g", "daemon off;"]
 
 ## Labels
-LABEL name="amq-broker-7/amq-broker-712-self-provisioning-plugin-rhel8"
-LABEL description="Red Hat AMQ 7.12 Self Provisioning Plugin"
+LABEL name="artemiscloud/activemq-artemis-self-provisioning-plugin"
+LABEL description="ActiveMQ Artemis Self Provisioning Plugin"
 LABEL maintainer="Roderick Kieley <rkieley@redhat.com>"
-LABEL version="7.12.0"
-LABEL amq.broker.version="7.12.0.SPP.1.ER1"
-LABEL com.redhat.component="amq-broker-self-provisioning-plugin-rhel8-container"
-LABEL io.k8s.display-name="Red Hat AMQ SPP.1 Self Provisioning Plugin"
-LABEL io.openshift.tags="messaging,amq,integration"
+LABEL version="0.1.0"
