@@ -4,7 +4,7 @@
     "properties": {
       "exact": true,
       "path": ["/k8s/ns/:ns/brokers", "/k8s/all-namespaces/brokers"],
-      "component": { "$codeRef": "BrokersPage" }
+      "component": { "$codeRef": "BrokersListContainer.BrokersContainer" }
     }
   },
   {
@@ -12,7 +12,7 @@
     "properties": {
       "exact": true,
       "path": ["/k8s/ns/:ns/add-broker", "/k8s/all-namespaces/add-broker"],
-      "component": { "$codeRef": "AddBrokerPage" }
+      "component": { "$codeRef": "AddBrokerContainer.AddBrokerPage" }
     }
   },
   {
@@ -23,37 +23,66 @@
         "/k8s/ns/:ns/edit-broker/:name",
         "/k8s/all-namespaces/edit-broker/:name"
       ],
-      "component": { "$codeRef": "UpdateBrokerPage" }
+      "component": { "$codeRef": "UpdateBrokerContainer.UpdateBrokerPage" }
     }
   },
   {
     "type": "console.page/route",
     "properties": {
-      "exact": false,
+      "exact": true,
       "path": [
         "/k8s/ns/:ns/brokers/:name",
         "/k8s/all-namespaces/brokers/:name"
       ],
-      "component": { "$codeRef": "BrokerDetailsPage" }
+      "component": { "$codeRef": "BrokerDetailsContainer.App" }
     }
   },
   {
-    "type": "console.navigation/section",
+    "type": "console.tab/horizontalNav",
     "properties": {
-      "id": "activemq",
-      "perspective": "admin",
-      "name": "ActiveMQ Artemis",
-      "dataAttributes": { "data-quickstart-id": "qs-nav-home" }
+      "page": {
+        "name": "Addresses",
+        "href": "addresses"
+      },
+      "model": {
+        "group": "core",
+        "version": "v1",
+        "kind": "Pod"
+      },
+      "component": { "$codeRef": "AddressesContainer.App" }
+    }
+  },
+  {
+    "type": "console.page/route",
+    "properties": {
+      "exact": true,
+      "path": [
+        "/k8s/ns/:ns/pods/:podName/addresses/address/:name",
+        "/k8s/all-namespaces/pods/:podName/addresses/address/:name"
+      ],
+      "component": { "$codeRef": "AddressDetailsContainer.App" }
     }
   },
   {
     "type": "console.navigation/href",
     "properties": {
       "id": "brokers",
-      "name": "ActiveMQ Artemis Self Provisioning",
+      "name": "Brokers",
       "href": "/k8s/all-namespaces/brokers",
+      "insertAfter": "statefulsets",
       "perspective": "admin",
-      "section": "activemq"
+      "section": "workloads"
+    }
+  },
+  {
+    "type": "console.resource/create",
+    "properties": {
+      "model": {
+        "group": "broker.amq.io",
+        "version": "v1beta1",
+        "kind": "ActiveMQArtemis"
+      },
+      "component": { "$codeRef": "AddBrokerContainer.AddBrokerPage" }
     }
   }
 ]

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Flex, Radio } from '@patternfly/react-core';
-import { useTranslation } from '../../../../i18n';
-import { EditorType } from '../../../utils/add-broker';
+import { useTranslation } from '@app/i18n/i18n';
+import { EditorType } from '@app/reducers/7.12/reducer';
 
 type EditorToggleProps = {
   value: EditorType;
@@ -27,20 +27,20 @@ export const EditorToggle: React.FC<EditorToggleProps> = ({
         role="radiogroup"
         aria-labelledby="radio-group-title-editor-toggle"
       >
-        <label id="radio-group-title-editor-toggle">{t('configure_via')}</label>
+        <label id="radio-group-title-editor-toggle">{t('Configure Via')}</label>
         <Radio
-          isChecked={value === EditorType.Form}
-          name={EditorType.Form}
-          onChange={handleChange}
-          label={t('form_view')}
-          id={EditorType.Form}
-          value={EditorType.Form}
+          isChecked={value === EditorType.BROKER}
+          name={EditorType.BROKER}
+          onChange={(event, _checked: boolean) => handleChange(_checked, event)}
+          label={t('Broker View')}
+          id={EditorType.BROKER}
+          value={EditorType.BROKER}
         />
         <Radio
           isChecked={value === EditorType.YAML}
           name={EditorType.YAML}
-          onChange={handleChange}
-          label={t('yaml_view')}
+          onChange={(event, _checked: boolean) => handleChange(_checked, event)}
+          label={t('Yaml View')}
           id={EditorType.YAML}
           value={EditorType.YAML}
           data-test={`${EditorType.YAML}-view-input`}

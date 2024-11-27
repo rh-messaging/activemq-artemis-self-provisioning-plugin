@@ -1,51 +1,41 @@
-import { useEffect, useState, FC } from 'react';
-import { useHistory, useParams } from 'react-router-dom';
-import { k8sListItems, k8sDelete } from '@openshift-console/dynamic-plugin-sdk';
+import { useState, FC } from 'react';
 import {
-  AMQBrokerModel,
-  K8sResourceKind,
-  K8sResourceCommon,
-} from '../../utils';
-import { BrokersList } from './components/BrokersList';
-import { PreConfirmDeleteModal } from './components/PreConfirmDeleteModal';
+  k8sDelete,
+  useK8sWatchResource,
+} from '@openshift-console/dynamic-plugin-sdk';
+import { AMQBrokerModel } from '@app/k8s/models';
+import { K8sResourceCommonWithData, BrokerCR } from '@app/k8s/types';
+import { BrokersList } from './components/BrokersList/BrokersList';
+import { PreConfirmDeleteModal } from './components/PreConfirmDeleteModal/PreConfirmDeleteModal';
+import { useNavigate, useParams } from 'react-router-dom-v5-compat';
 
-const BrokersContainer: FC = () => {
-  const history = useHistory();
+export const BrokersContainer: FC = () => {
+  const navigate = useNavigate();
   const { ns: namespace } = useParams<{ ns?: string }>();
 
   //states
-  const [brokers, setBrokers] = useState<K8sResourceKind[]>();
-  const [loading, setLoading] = useState<boolean>(true);
-  const [loadError, setLoadError] = useState<any>();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedBroker, setSelectedBroker] = useState<K8sResourceKind>();
+  const [selectedBroker, setSelectedBroker] =
+    useState<K8sResourceCommonWithData>();
+  const [_deleteError, setDeleteError] = useState<string | null>(null);
+  const [_deleteSuccess, setDeleteSuccess] = useState<boolean>(false);
 
-  const fetchK8sListItems = () => {
-    setLoading(false);
-    k8sListItems<K8sResourceKind>({
-      model: AMQBrokerModel,
-      queryParams: { ns: namespace },
-    })
-      .then((brokers) => {
-        setBrokers(brokers);
-      })
-      .catch((e) => {
-        setLoadError(e.message);
-        console.error('Brokers not found');
-      })
-      .finally(() => {
-        setLoading(true);
-      });
-  };
+  const [brokers, loaded, loadError] = useK8sWatchResource<
+    K8sResourceCommonWithData[]
+  >({
+    namespace,
+    groupVersionKind: {
+      kind: AMQBrokerModel.kind,
+      version: AMQBrokerModel.apiVersion,
+      group: AMQBrokerModel.apiGroup,
+    },
+    isList: true,
+  });
 
-  useEffect(() => {
-    fetchK8sListItems();
-  }, [namespace]);
-
-  const onEditBroker = (broker: K8sResourceCommon) => {
+  const onEditBroker = (broker: BrokerCR) => {
     const namespace = broker.metadata.namespace;
     const name = broker.metadata.name;
-    history.push(`/k8s/ns/${namespace}/edit-broker/${name}`);
+    navigate(`/k8s/ns/${namespace}/edit-broker/${name}`);
   };
 
   const onDeleteBroker = () => {
@@ -53,19 +43,20 @@ const BrokersContainer: FC = () => {
       model: AMQBrokerModel,
       resource: { ...selectedBroker },
     })
-      .then((res) => {
-        fetchK8sListItems();
-        console.log(res);
+      .then(() => {
+        setDeleteSuccess(true);
+        setDeleteError(null);
       })
       .catch((e) => {
-        setLoadError(e.message);
+        setDeleteError(`Failed to delete broker: ${e.message}`);
+        setDeleteSuccess(false);
       })
       .finally(() => {
         setIsModalOpen(false);
       });
   };
 
-  const onOpenModal = (broker?: K8sResourceCommon) => {
+  const onOpenModal = (broker?: BrokerCR) => {
     setSelectedBroker(broker);
     setIsModalOpen(!isModalOpen);
   };
@@ -81,7 +72,7 @@ const BrokersContainer: FC = () => {
       <BrokersList
         brokers={brokers}
         loadError={loadError}
-        loaded={loading}
+        loaded={loaded}
         namespace={namespace}
         onOpenModal={onOpenModal}
         onEditBroker={onEditBroker}
@@ -89,5 +80,3 @@ const BrokersContainer: FC = () => {
     </>
   );
 };
-
-export default BrokersContainer;

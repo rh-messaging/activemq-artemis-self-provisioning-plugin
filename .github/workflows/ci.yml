@@ -41,31 +41,60 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v2
+        uses: github/codeql-action/init@v3
         with:
           languages: ${{ matrix.language }}
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v2
+        uses: github/codeql-action/analyze@v3
+
+  openapi:
+    name: Check that the openapi file is in sync with the generated files
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+
+      - name: Get cache and install dependencies
+        uses: ./.github/actions/cache-restore
+
+      - name: run the code generation
+        continue-on-error: true
+        run: yarn codegen
+
+      - name: regenerate the api.md
+        continue-on-error: true
+        run: yarn build-api-doc && yarn pretty-quick
+
+      - name: check there is no manual changes
+        run: git diff && [ -z "$(git status --porcelain=v1 2>/dev/null)" ] && echo "✓ No manual changes." || echo "✗ Codegen manually changed, please refer to the api.md for the procedure to follow for programmatically generated endpoints." && [ -z "$(git status --porcelain=v1 2>/dev/null)" ]
 
   build:
     name: Build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: 16.x
+          node-version: 20.x
 
       - name: Get cache and install dependencies
         uses: ./.github/actions/cache-restore
+      
+      - name: Extract translations
+        run: yarn i18n && git diff --exit-code locales/en/plugin__activemq-artemis-self-provisioning-plugin.json
 
       - name: Build project
         run: yarn run build
@@ -74,23 +103,12 @@ jobs:
         run: yarn test:coverage
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v5
         env:
          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Check for uncommited changes
         run: git diff --quiet --exit-code
-
-      # TODO: uncomment after fixing storybook issue: https://github.com/openshift/dynamic-plugin-sdk/issues/216
-      # - name: Build storybook
-      #   run: |
-      #     yarn run build-storybook -- --quiet --loglevel silent
-
-      # - name: Deploy story book to github pages 🚀
-      #   uses: JamesIves/github-pages-deploy-action@v4.4.0
-      #   with:
-      #     branch: gh-pages # The branch the action should deploy to.
-      #     folder: storybook-static # The folder the action should deploy.
 
       - name: Set outputs
         id: vars
@@ -104,7 +122,7 @@ jobs:
           echo ${{ steps.vars.outputs.date }}
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@v3
 
       - name: Build the image
         id: build-image

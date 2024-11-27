@@ -1,5 +1,4 @@
-import { FC } from 'react';
-import { Link } from 'react-router-dom';
+import { FC, useState } from 'react';
 import {
   RowProps,
   TableData,
@@ -8,17 +7,103 @@ import {
 } from '@openshift-console/dynamic-plugin-sdk';
 import { ActionsColumn, IAction } from '@patternfly/react-table';
 import {
-  K8sResourceCommon,
+  BrokerCR,
   BrokerConditionTypes,
-  getCondition,
-  getConditionString,
-} from '../../../../utils';
-import { useTranslation } from '../../../../i18n';
+  K8sResourceConditionStatus,
+} from '@app/k8s/types';
+import { useTranslation } from '@app/i18n/i18n';
+import {
+  Button,
+  DescriptionList,
+  DescriptionListDescription,
+  DescriptionListGroup,
+  DescriptionListTerm,
+  Divider,
+  Modal,
+  ModalVariant,
+} from '@patternfly/react-core';
+import { K8sResourceCondition } from '@app/k8s/types';
+import { Link } from 'react-router-dom-v5-compat';
 
-export type BrokerRowProps = RowProps<K8sResourceCommon> & {
-  columns: TableColumn<K8sResourceCommon>[];
-  onEditBroker: (broker: K8sResourceCommon) => void;
-  onOpenModal: (broker: K8sResourceCommon) => void;
+const getConditionOKCount = (conditions: K8sResourceCondition[]): number =>
+  conditions.filter((c) => c.status === K8sResourceConditionStatus.True).length;
+
+const getConditionString = (conditions: K8sResourceCondition[]): string =>
+  `${getConditionOKCount(conditions)} OK / ${conditions.length}`;
+
+type ConditionModalProps = {
+  status: BrokerCR['status'];
+};
+
+const ConditionModal: FC<ConditionModalProps> = ({ status }) => {
+  const { t } = useTranslation();
+  const [isOpen, setIsOpen] = useState(false);
+  const conditions = status?.conditions
+    ? (status.conditions as K8sResourceCondition[])
+    : undefined;
+  if (!conditions) {
+    return <>-</>;
+  }
+  return (
+    <>
+      <Button variant="link" onClick={() => setIsOpen(true)}>
+        {status ? getConditionString(status?.conditions) : '-'}
+      </Button>
+      <Modal
+        bodyAriaLabel="Status report"
+        tabIndex={0}
+        variant={ModalVariant.medium}
+        title="Status report"
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+      >
+        <DescriptionList>
+          {conditions.map((condition, index) => {
+            return (
+              <DescriptionListGroup
+                key={`${condition.type}-${condition.lastTransitionTime}`}
+              >
+                {index > 0 && <Divider />}
+                <DescriptionListTerm>
+                  {t('Condition at')} {condition.lastTransitionTime}
+                </DescriptionListTerm>
+                <DescriptionListDescription>
+                  <DescriptionList columnModifier={{ lg: '2Col' }}>
+                    <DescriptionListTerm>status</DescriptionListTerm>
+                    <DescriptionListDescription>
+                      {condition.status}
+                    </DescriptionListDescription>
+                    <DescriptionListTerm>type</DescriptionListTerm>
+                    <DescriptionListDescription>
+                      {condition.type}
+                    </DescriptionListDescription>
+                    <DescriptionListTerm>reason</DescriptionListTerm>
+                    <DescriptionListDescription>
+                      {condition.reason}
+                    </DescriptionListDescription>
+                    {condition.message !== '' && (
+                      <>
+                        <DescriptionListTerm>message</DescriptionListTerm>
+                        <DescriptionListDescription>
+                          {condition.message}
+                        </DescriptionListDescription>
+                      </>
+                    )}
+                  </DescriptionList>
+                </DescriptionListDescription>
+              </DescriptionListGroup>
+            );
+          })}
+        </DescriptionList>
+      </Modal>
+    </>
+  );
+};
+
+export type BrokerRowProps = RowProps<BrokerCR> & {
+  columns: TableColumn<BrokerCR>[];
+  onEditBroker: (broker: BrokerCR) => void;
+  onOpenModal: (broker: BrokerCR) => void;
 };
 
 export const BrokerRow: FC<BrokerRowProps> = ({
@@ -31,23 +116,24 @@ export const BrokerRow: FC<BrokerRowProps> = ({
   const { t } = useTranslation();
   const {
     metadata: { name, creationTimestamp, namespace },
-    spec: {
-      deploymentPlan: { size },
-    },
     status,
   } = obj;
 
+  const size = obj.spec?.deploymentPlan?.size;
+
   const readyCondition = status
-    ? getCondition(obj.status.conditions, BrokerConditionTypes.Ready)
+    ? obj.status.conditions.find(
+        (c: K8sResourceCondition) => c.type === BrokerConditionTypes.Ready,
+      )
     : null;
 
   const rowActions: IAction[] = [
     {
-      title: t('edit_broker'),
+      title: t('Edit Broker'),
       onClick: () => onEditBroker(obj),
     },
     {
-      title: t('delete_broker'),
+      title: t('Delete Broker'),
       onClick: () => onOpenModal(obj),
     },
   ];
@@ -55,13 +141,13 @@ export const BrokerRow: FC<BrokerRowProps> = ({
   return (
     <>
       <TableData id={columns[0].id} activeColumnIDs={activeColumnIDs}>
-        <Link to={`/ns/${namespace}/brokers/${name}`}>{name}</Link>
+        <Link to={`/k8s/ns/${namespace}/brokers/${name}`}>{name}</Link>
       </TableData>
       <TableData id={columns[1].id} activeColumnIDs={activeColumnIDs}>
         {(readyCondition && readyCondition.status) || '-'}
       </TableData>
       <TableData id={columns[2].id} activeColumnIDs={activeColumnIDs}>
-        {status ? getConditionString(status?.conditions) : '-'}
+        <ConditionModal status={status} />
       </TableData>
       <TableData id={columns[3].id} activeColumnIDs={activeColumnIDs}>
         {size}

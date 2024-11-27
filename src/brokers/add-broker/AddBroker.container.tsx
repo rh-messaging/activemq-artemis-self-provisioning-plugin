@@ -1,49 +1,103 @@
-import { FC, useState } from 'react';
-import { useHistory, useParams } from 'react-router-dom';
+import { FC, useReducer, useState } from 'react';
 import { k8sCreate } from '@openshift-console/dynamic-plugin-sdk';
-import { AlertVariant } from '@patternfly/react-core';
+import { Alert, AlertVariant } from '@patternfly/react-core';
 import { AddBroker } from './AddBroker.component';
-import { AMQBrokerModel, K8sResourceCommon } from '../../utils';
-import { addBrokerInitialValues, AddBrokerFormYamlValues } from '../utils';
+import { AMQBrokerModel } from '@app/k8s/models';
+import { BrokerCR } from '@app/k8s/types';
+import {
+  BrokerCreationFormState,
+  BrokerCreationFormDispatch,
+  newArtemisCRState,
+  artemisCrReducer,
+  ArtemisReducerOperations,
+} from '@app/reducers/7.12/reducer';
+import { AddBrokerResourceValues } from '@app/reducers/7.12/import-types';
+import { useNavigate, useParams } from 'react-router-dom-v5-compat';
+import { useGetIngressDomain } from '@app/k8s/customHooks';
 
-const AddBrokerPage: FC = () => {
-  const history = useHistory();
+export interface AddBrokerProps {
+  initialValues: AddBrokerResourceValues;
+}
+
+export const AddBrokerPage: FC = () => {
+  const navigate = useNavigate();
   const { ns: namespace } = useParams<{ ns?: string }>();
 
-  const defaultNotification = { title: '', variant: AlertVariant.default };
-  const initialValues: AddBrokerFormYamlValues =
-    addBrokerInitialValues(namespace);
+  const initialValues = newArtemisCRState(namespace);
 
   //states
-  const [formValues, setFormValues] =
-    useState<AddBrokerFormYamlValues>(initialValues);
-  const [notification, setNotification] = useState(defaultNotification);
+  const [brokerModel, dispatch] = useReducer(artemisCrReducer, initialValues);
+
+  const params = new URLSearchParams(location.search);
+  const returnUrl = params.get('returnUrl');
 
   const handleRedirect = () => {
-    history.push('/k8s/all-namespaces/brokers');
+    if (returnUrl) {
+      navigate(returnUrl);
+    } else {
+      navigate(-1);
+    }
   };
 
-  const k8sCreateBroker = (content: K8sResourceCommon) => {
+  const [_hasBrokerUpdated, setHasBrokerUpdated] = useState(false);
+  const [alert, setAlert] = useState('');
+
+  const k8sCreateBroker = (content: BrokerCR) => {
     k8sCreate({ model: AMQBrokerModel, data: content })
-      .then(() => {
-        setNotification(defaultNotification);
-        handleRedirect();
-      })
+      .then(
+        () => {
+          setAlert('');
+          setHasBrokerUpdated(true);
+          handleRedirect();
+        },
+        (reason: Error) => {
+          setAlert(reason.message);
+        },
+      )
       .catch((e) => {
-        setNotification({ title: e.message, variant: AlertVariant.danger });
-        console.error(e);
+        setAlert(e.message);
       });
   };
 
+  const [prevNamespace, setPrevNamespace] = useState(namespace);
+  if (prevNamespace !== namespace) {
+    dispatch({
+      operation: ArtemisReducerOperations.setNamespace,
+      payload: namespace,
+    });
+    setPrevNamespace(namespace);
+  }
+
+  const { clusterDomain, isLoading } = useGetIngressDomain();
+  const [isDomainSet, setIsDomainSet] = useState(false);
+  if (!isLoading && !isDomainSet) {
+    dispatch({
+      operation: ArtemisReducerOperations.setIngressDomain,
+      payload: {
+        ingressUrl: clusterDomain,
+        isSetByUser: false,
+      },
+    });
+    setIsDomainSet(true);
+  }
+
   return (
-    <AddBroker
-      namespace={namespace}
-      notification={notification}
-      onCreateBroker={k8sCreateBroker}
-      formValues={formValues}
-      onChangeValue={setFormValues}
-    />
+    <BrokerCreationFormState.Provider value={brokerModel}>
+      <BrokerCreationFormDispatch.Provider value={dispatch}>
+        {alert !== '' && (
+          <Alert
+            title={alert}
+            variant={AlertVariant.danger}
+            isInline
+            actionClose
+            className="pf-u-mt-md pf-u-mx-md"
+          />
+        )}
+        <AddBroker
+          onSubmit={() => k8sCreateBroker(brokerModel.cr)}
+          onCancel={handleRedirect}
+        />
+      </BrokerCreationFormDispatch.Provider>
+    </BrokerCreationFormState.Provider>
   );
 };
-
-export default AddBrokerPage;

@@ -9,15 +9,15 @@ import {
   ListPageCreateLink,
 } from '@openshift-console/dynamic-plugin-sdk';
 import { BrokerRow, BrokerRowProps } from './BrokerRow';
-import { useTranslation } from '../../../../i18n';
-import { K8sResourceCommon } from '../../../../utils';
+import { useTranslation } from '@app/i18n/i18n';
+import { BrokerCR } from '@app/k8s/types';
 
 type BrokersTableProps = Pick<
   BrokerRowProps,
   'onOpenModal' | 'onEditBroker'
 > & {
-  data: K8sResourceCommon[];
-  unfilteredData: K8sResourceCommon[];
+  data: BrokerCR[];
+  unfilteredData: BrokerCR[];
   loaded: boolean;
   loadError: any;
 };
@@ -32,25 +32,25 @@ const BrokersTable: FC<BrokersTableProps> = ({
 }) => {
   const { t } = useTranslation();
 
-  const columns: TableColumn<K8sResourceCommon>[] = [
+  const columns: TableColumn<BrokerCR>[] = [
     {
-      title: t('name'),
+      title: t('Name'),
       id: 'name',
     },
     {
-      title: t('ready'),
+      title: t('Ready'),
       id: 'ready',
     },
     {
-      title: t('conditions'),
+      title: t('Conditions'),
       id: 'conditions',
     },
     {
-      title: t('size'),
+      title: t('Size'),
       id: 'Size',
     },
     {
-      title: t('create'),
+      title: t('Create'),
       id: 'created',
     },
     {
@@ -60,7 +60,7 @@ const BrokersTable: FC<BrokersTableProps> = ({
   ];
 
   return (
-    <VirtualizedTable<K8sResourceCommon>
+    <VirtualizedTable<BrokerCR>
       data={data}
       unfilteredData={unfilteredData}
       loaded={loaded}
@@ -84,7 +84,7 @@ export type BrokersListProps = Pick<
   BrokerRowProps,
   'onOpenModal' | 'onEditBroker'
 > & {
-  brokers: K8sResourceCommon[];
+  brokers: BrokerCR[];
   loaded: boolean;
   loadError: any;
   namespace: string;
@@ -103,9 +103,13 @@ const BrokersList: FC<BrokersListProps> = ({
 
   return (
     <>
-      <ListPageHeader title={t('brokers')}>
-        <ListPageCreateLink to={`/k8s/ns/${namespace || 'default'}/add-broker`}>
-          {t('create_broker')}
+      <ListPageHeader title={t('Brokers')}>
+        <ListPageCreateLink
+          to={`/k8s/ns/${
+            namespace || 'default'
+          }/add-broker?returnUrl=${encodeURIComponent(location.pathname)}`}
+        >
+          {t('Create Broker')}
         </ListPageCreateLink>
       </ListPageHeader>
       <ListPageBody>
