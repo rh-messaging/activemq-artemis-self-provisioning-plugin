@@ -247,17 +247,17 @@ export const useJolokiaLogin = (
 };
 
 function getProxyUrl(): string {
-  return process.env.NODE_ENV === 'production'
-    ? '/api/proxy/plugin/activemq-artemis-self-provisioning-plugin/api-server-service'
-    : '';
+  return '/api/proxy/plugin/activemq-artemis-self-provisioning-plugin/api-server-service';
 }
 
 export const useGetApiServerBaseUrl = (): string => {
   let apiHost = 'localhost';
-  let apiPort = '9443';
+  let apiPort = process.env.JOLOKIA_NO_TLS ? '9000' : '9442';
+  let protocol = process.env.JOLOKIA_NO_TLS ? 'http' : 'https';
   if (process.env.NODE_ENV === 'production') {
     apiHost = location.hostname;
     apiPort = '443';
+    protocol = 'https';
   }
-  return 'https://' + apiHost + ':' + apiPort + getProxyUrl() + '/api/v1';
+  return protocol + '://' + apiHost + ':' + apiPort + getProxyUrl() + '/api/v1';
 };
