@@ -3,6 +3,7 @@ import {
   K8sResourceKind,
   useK8sWatchResource,
 } from '@openshift-console/dynamic-plugin-sdk';
+import { useParams } from 'react-router-dom-v5-compat';
 
 function getJolokiaProtocol(broker: K8sResourceKind): string {
   return broker.spec['console'].sslEnabled ? 'https' : 'http';
@@ -106,6 +107,7 @@ export const useGetEndpointData = (
   broker: K8sResourceKind,
   ordinal: number,
 ): BrokerConnectionData => {
+  const { ns: namespace } = useParams<{ ns?: string; name?: string }>();
   const [routes] = useK8sWatchResource<K8sResourceKind[]>({
     isList: true,
     groupVersionKind: {
@@ -114,6 +116,7 @@ export const useGetEndpointData = (
       version: 'v1',
     },
     namespaced: true,
+    namespace: namespace,
   });
   return useGetJolokiaLoginParameters(broker, routes, ordinal);
 };
