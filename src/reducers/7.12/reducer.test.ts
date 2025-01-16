@@ -649,8 +649,8 @@ describe('test the creation broker reducer', () => {
         adminPassword: 'thing',
       },
     });
-    expect(newState.cr.spec.console.adminUser).toBe('some');
-    expect(newState.cr.spec.console.adminPassword).toBe('thing');
+    expect(newState.cr.spec.adminUser).toBe('some');
+    expect(newState.cr.spec.adminPassword).toBe('thing');
   });
 
   it('test setConsoleExpose', () => {

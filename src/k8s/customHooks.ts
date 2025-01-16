@@ -1,4 +1,9 @@
-import { k8sGet, useK8sModel } from '@openshift-console/dynamic-plugin-sdk';
+import {
+  K8sResourceCommon,
+  k8sGet,
+  useK8sModel,
+  useK8sWatchResource,
+} from '@openshift-console/dynamic-plugin-sdk';
 import { useState } from 'react';
 import { AMQBrokerModel, IngressDomainModel } from './models';
 import { BrokerCR, Ingress } from './types';
@@ -103,4 +108,23 @@ export const useHasCertManager = (): {
     setIsFirstMount(false);
   }
   return { hasCertManager: hasCertManager, isLoading: loading, error: error };
+};
+
+export const useGetServiceAccounts = (
+  namespace: string,
+): {
+  serviceAccounts: K8sResourceCommon[];
+  isLoading: boolean;
+  error: string;
+} => {
+  const [sas, loaded, error] = useK8sWatchResource<K8sResourceCommon[]>({
+    isList: true,
+    groupVersionKind: {
+      kind: 'ServiceAccount',
+      version: 'v1',
+    },
+    namespaced: true,
+    namespace: namespace,
+  });
+  return { serviceAccounts: sas, isLoading: !loaded, error: error };
 };

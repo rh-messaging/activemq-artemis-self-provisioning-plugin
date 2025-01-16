@@ -671,8 +671,8 @@ export const reducer712: React.Reducer<
       formState.cr.spec.console.expose = action.payload;
       break;
     case ArtemisReducerOperations712.setConsoleCredentials:
-      formState.cr.spec.console.adminUser = action.payload.adminUser;
-      formState.cr.spec.console.adminPassword = action.payload.adminPassword;
+      formState.cr.spec.adminUser = action.payload.adminUser;
+      formState.cr.spec.adminPassword = action.payload.adminPassword;
       break;
     case ArtemisReducerOperations712.setAcceptorPort:
       updateConfigPort(

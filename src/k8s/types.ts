@@ -98,6 +98,9 @@ export type BrokerCR = K8sResourceCommon & {
       jolokiaAgentEnabled?: boolean;
       journalType?: string;
       managementRBACEnabled?: boolean;
+      podSecurity?: {
+        serviceAccountName?: string;
+      };
     };
   };
   status?: { [key: string]: any };

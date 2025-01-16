@@ -16,7 +16,6 @@ import {
   FormGroup,
   FormSelect,
   FormSelectOption,
-  Grid,
   Switch,
 } from '@patternfly/react-core';
 import { FC, useContext, useState } from 'react';
@@ -24,6 +23,8 @@ import { BrokerCR } from '@app/k8s/types';
 import { ConfigType } from '../ConfigurationPage';
 import { CertSecretSelector } from '../CertSecretSelector/CertSecretSelector';
 import { useTranslation } from '@app/i18n/i18n';
+import { ArtemisReducerOperations713 } from '@app/reducers/7.13/reducer';
+import { ServiceAccountSelector } from './ServiceAccountSelector';
 
 export type ConsoleConfigProps = {
   brokerId: number;
@@ -31,7 +32,7 @@ export type ConsoleConfigProps = {
 
 export const ConsoleConfigPage: FC<ConsoleConfigProps> = ({ brokerId }) => {
   const { t } = useTranslation();
-  const { cr } = useContext(BrokerCreationFormState);
+  const { cr, brokerVersion } = useContext(BrokerCreationFormState);
   const dispatch = useContext(BrokerCreationFormDispatch);
 
   const GetConsoleSSLEnabled = (brokerModel: BrokerCR): boolean => {
@@ -70,6 +71,13 @@ export const ConsoleConfigPage: FC<ConsoleConfigProps> = ({ brokerId }) => {
     });
   };
 
+  const handleAuthChange = (value: boolean) => {
+    dispatch({
+      operation: ArtemisReducerOperations713.isUsingToken,
+      payload: value,
+    });
+  };
+
   const setConsoleExpose = (value: boolean) => {
     dispatch({
       operation: ArtemisReducerOperations712.setConsoleExpose,
@@ -94,10 +102,6 @@ export const ConsoleConfigPage: FC<ConsoleConfigProps> = ({ brokerId }) => {
     setExecOnlyOnce(false);
     setConsoleExpose(exposeConsole);
     setConsoleExposeMode(exposeMode);
-    dispatch({
-      operation: ArtemisReducerOperations712.setConsoleCredentials,
-      payload: { adminUser: 'admin', adminPassword: 'admin' },
-    });
   }
 
   return (
@@ -113,52 +117,48 @@ export const ConsoleConfigPage: FC<ConsoleConfigProps> = ({ brokerId }) => {
           />
         }
       >
-        <Grid hasGutter md={6}>
-          <FormFieldGroup>
-            <FormGroup
-              label={t('Expose')}
-              fieldId={'console-config-expose-formgroup'}
-              isRequired
-            >
-              <Checkbox
-                label={t('Expose Console')}
-                isChecked={exposeConsole}
-                name={'check-console-expose'}
-                id={'check-expose-console'}
-                onChange={(_event, value: boolean) => setConsoleExpose(value)}
+        <FormGroup
+          label={t('Expose')}
+          fieldId={'console-config-expose-formgroup'}
+          isRequired
+        >
+          <Checkbox
+            label={t('Expose Console')}
+            isChecked={exposeConsole}
+            name={'check-console-expose'}
+            id={'check-expose-console'}
+            onChange={(_event, value: boolean) => setConsoleExpose(value)}
+          />
+        </FormGroup>
+        <FormGroup
+          label={t('ExposeMode')}
+          fieldId={'console-config-exposemode-formgroup'}
+        >
+          <FormSelect
+            label={t('console expose mode')}
+            value={exposeMode}
+            onChange={(_event, value: ExposeMode) =>
+              setConsoleExposeMode(value)
+            }
+            aria-label="formselect-expose-mode-aria-label"
+          >
+            {exposeModes.map((mode, index) => (
+              <FormSelectOption
+                key={'console-exposemode-option' + index}
+                value={mode.value}
+                label={mode.label}
               />
-            </FormGroup>
-            <FormGroup
-              label={t('ExposeMode')}
-              fieldId={'console-config-exposemode-formgroup'}
-            >
-              <FormSelect
-                label={t('console expose mode')}
-                value={exposeMode}
-                onChange={(_event, value: ExposeMode) =>
-                  setConsoleExposeMode(value)
-                }
-                aria-label="formselect-expose-mode-aria-label"
-              >
-                {exposeModes.map((mode, index) => (
-                  <FormSelectOption
-                    key={'console-exposemode-option' + index}
-                    value={mode.value}
-                    label={mode.label}
-                  />
-                ))}
-              </FormSelect>
-            </FormGroup>
-            <Switch
-              id={'id-switch-console-sslEnabled'}
-              label={t('SSL Enabled for console')}
-              labelOff="SSL disabled for console"
-              isChecked={isSSLEnabled}
-              onChange={(_event, value: boolean) => handleSSLEnabled(value)}
-              ouiaId="BasicSwitch-console-ssl"
-            />
-          </FormFieldGroup>
-        </Grid>
+            ))}
+          </FormSelect>
+        </FormGroup>
+        <Switch
+          id={'id-switch-console-sslEnabled'}
+          label={t('SSL Enabled for console')}
+          labelOff="SSL disabled for console"
+          isChecked={isSSLEnabled}
+          onChange={(_event, value: boolean) => handleSSLEnabled(value)}
+          ouiaId="BasicSwitch-console-ssl"
+        />
       </FormFieldGroupExpandable>
       {isSSLEnabled && (
         <FormFieldGroup
@@ -184,6 +184,43 @@ export const ConsoleConfigPage: FC<ConsoleConfigProps> = ({ brokerId }) => {
             configName={'console'}
           />
         </FormFieldGroup>
+      )}
+      {brokerVersion === '7.13' && (
+        <FormFieldGroupExpandable
+          isExpanded
+          header={
+            <FormFieldGroupHeader
+              titleText={{
+                text: t('Console authentication'),
+                id: 'field-group-consoleconfig' + 'console',
+              }}
+            />
+          }
+        >
+          <Switch
+            id={'id-switch-console-auth-token'}
+            label={t('Use token authentication for the console')}
+            labelOff={t(
+              'Use default username/password to authenticate on the console',
+            )}
+            isChecked={!cr.spec?.adminUser}
+            onChange={(_event, value: boolean) => handleAuthChange(value)}
+          />
+          {!cr.spec?.adminUser && (
+            <FormFieldGroup
+              header={
+                <FormFieldGroupHeader
+                  titleText={{
+                    text: t('Configuration for the token authentication'),
+                    id: 'field-group-configuration-token' + 'console',
+                  }}
+                />
+              }
+            >
+              <ServiceAccountSelector />
+            </FormFieldGroup>
+          )}
+        </FormFieldGroupExpandable>
       )}
     </Form>
   );

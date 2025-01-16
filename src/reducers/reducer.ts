@@ -71,7 +71,6 @@ export const newArtemisCR = (namespace: string): FormState => {
   return state;
 };
 
-// 7.13 is 7.12 + extras
 export type ReducerActions =
   | ArtemisReducerActions712
   | ArtemisReducerActions713
