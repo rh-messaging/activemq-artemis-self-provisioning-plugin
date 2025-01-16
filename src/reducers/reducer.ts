@@ -1,6 +1,13 @@
 import { createContext } from 'react';
-import { newBroker712CR, reducer712 as reducer712 } from './7.12/reducer';
-import { reducer713 as reducer713 } from './7.13/reducer';
+import {
+  areMandatoryValuesSet712,
+  newBroker712CR,
+  reducer712 as reducer712,
+} from './7.12/reducer';
+import {
+  areMandatoryValuesSet713,
+  reducer713 as reducer713,
+} from './7.13/reducer';
 import { FormState712 } from './7.12/import-types';
 import { FormState713 } from './7.13/import-types';
 import { ArtemisReducerActions712 } from './7.12/reducer';
@@ -126,4 +133,10 @@ export const artemisCrReducer: React.Reducer<FormState, ReducerActions> = (
 
 export const getBrokerVersion = (formState: FormState) => {
   return formState.brokerVersion;
+};
+
+export const areMandatoryValuesSet = (formState: FormState) => {
+  return (
+    areMandatoryValuesSet712(formState) && areMandatoryValuesSet713(formState)
+  );
 };

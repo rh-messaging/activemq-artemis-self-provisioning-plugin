@@ -16,6 +16,7 @@ import {
   BrokerCreationFormDispatch,
   BrokerCreationFormState,
   EditorType,
+  areMandatoryValuesSet,
 } from '@app/reducers/reducer';
 import { FormView } from '../../shared-components/FormView/FormView';
 import { EditorToggle } from './components/EditorToggle/EditorToggle';
@@ -62,6 +63,14 @@ export const AddBroker: FC<AddBrokerPropTypes> = ({
       });
     }
   };
+
+  const onSubmitForFormView = () => {
+    // check that all required values are populated
+    if (areMandatoryValuesSet(formValues)) {
+      onSubmit();
+    }
+  };
+
   const [triggerDelayedSubmit, setTriggerDelayedSubmit] = useState(false);
   const [prevTriggerDelayedSubmit, setPrevTriggerDelayedSubmit] =
     useState(triggerDelayedSubmit);
@@ -106,6 +115,10 @@ export const AddBroker: FC<AddBrokerPropTypes> = ({
       </Alert>
     );
   }
+  const navigationDisabled =
+    formValues.editorType === EditorType.BROKER
+      ? !areMandatoryValuesSet(formValues)
+      : false;
   return (
     <>
       <Modal
@@ -152,7 +165,11 @@ export const AddBroker: FC<AddBrokerPropTypes> = ({
         {t('Upon reloading, these modifications will be lost.')}
       </Modal>
       <Divider />
-      <EditorToggle value={editorType} onChange={onSelectEditorType} />
+      <EditorToggle
+        value={editorType}
+        onChange={onSelectEditorType}
+        isDisabled={navigationDisabled}
+      />
       <Divider />
       {editorType === EditorType.BROKER && <FormView />}
       {editorType === EditorType.YAML && (
@@ -172,9 +189,10 @@ export const AddBroker: FC<AddBrokerPropTypes> = ({
                   setWantsToQuitYamlView(true);
                   setPendingActionQuittingYAMLView('submit');
                 } else {
-                  onSubmit();
+                  onSubmitForFormView();
                 }
               }}
+              isDisabled={navigationDisabled}
             >
               {isUpdatingExisting ? t('Apply') : t('Create')}
             </Button>

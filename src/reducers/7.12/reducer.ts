@@ -1726,7 +1726,7 @@ export const getConfigPort = (
       return connector.port;
     }
   }
-  return -1;
+  return undefined;
 };
 
 export const getConfigHost = (
@@ -1740,7 +1740,7 @@ export const getConfigHost = (
       return connector.host;
     }
   }
-  return 'localhost';
+  return '';
 };
 
 export const getConfigProtocols = (
@@ -1760,7 +1760,7 @@ export const getConfigProtocols = (
       return acceptor.protocols;
     }
   }
-  return 'ALL';
+  return '';
 };
 
 export const getConfigBindToAllInterfaces = (
@@ -1893,6 +1893,28 @@ export const getIssuerForAcceptor = (cr: BrokerCR, acceptor: Acceptor) => {
   return '';
 };
 
+/**
+ * returns true if the issuer is missing from the CR
+ */
+export const isMissingIssuer = (cr: BrokerCR, acceptor: Acceptor) => {
+  if (!acceptor) {
+    return false;
+  }
+  // in case there are no resource templates in the CR
+  if (!cr.spec.resourceTemplates) {
+    return false;
+  }
+  // find if there is already an annotation for this acceptor
+  const selector = certManagerSelector(cr, acceptor.name);
+  const rt = cr.spec.resourceTemplates.find(
+    (rt) => rt.selector?.name === selector,
+  );
+  if (rt) {
+    return !rt.annotations['cert-manager.io/issuer'];
+  }
+  return false;
+};
+
 export const getIssuerIngressHostForAcceptor = (
   cr: BrokerCR,
   acceptor: Acceptor,
@@ -1914,4 +1936,45 @@ export const getIssuerIngressHostForAcceptor = (
     return rt.patch.spec.tls[0].hosts[podOrdinal];
   }
   return '';
+};
+
+export const areMandatoryValuesSet712 = (formState: FormState712) => {
+  if (!formState.cr?.metadata?.name) {
+    return false;
+  }
+  // check that every acceptor sets the required fields
+  if (formState.cr.spec?.acceptors && formState.cr.spec.acceptors.length > 0) {
+    const allAceptorOk = formState.cr.spec.acceptors
+      .map((acceptor) => {
+        const missingPort = !acceptor.port;
+        const missingProtocols = !acceptor.protocols;
+        return (
+          !missingPort &&
+          !missingProtocols &&
+          !isMissingIssuer(formState.cr, acceptor)
+        );
+      })
+      .reduce((acc, next) => acc && next);
+    if (!allAceptorOk) {
+      return false;
+    }
+  }
+  // check that every connector sets the required fields
+  if (
+    formState.cr.spec?.connectors &&
+    formState.cr.spec.connectors.length > 0
+  ) {
+    const allConnectorOk = formState.cr.spec.connectors
+      .map((connector) => {
+        const missingHostname = !connector.host;
+        const missingPort = !connector.port;
+        const missingProtocols = !connector.protocols;
+        return !missingPort && !missingProtocols && !missingHostname;
+      })
+      .reduce((acc, next) => acc && next);
+    if (!allConnectorOk) {
+      return false;
+    }
+  }
+  return true;
 };

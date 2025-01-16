@@ -1,4 +1,4 @@
-import { reducer712, ArtemisReducerActions712 } from '../7.12/reducer';
+import { ArtemisReducerActions712, reducer712 } from '../7.12/reducer';
 import { FormState713 } from './import-types';
 
 // Operations for 7.13 start at number 2000
@@ -79,4 +79,18 @@ export const reducer713: React.Reducer<
         action as ArtemisReducerActions712,
       ) as FormState713;
   }
+};
+
+export const areMandatoryValuesSet713 = (formState: FormState713) => {
+  // if the user wants to configure the token review and has not set the
+  // required data, return false.
+  if (formState.cr.spec.adminUser === undefined) {
+    if (!formState.cr?.spec?.deploymentPlan?.extraMounts?.secrets[0]) {
+      return false;
+    }
+    if (!formState.cr?.spec?.deploymentPlan?.podSecurity?.serviceAccountName) {
+      return false;
+    }
+  }
+  return true;
 };
