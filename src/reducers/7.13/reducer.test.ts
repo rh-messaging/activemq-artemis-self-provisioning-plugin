@@ -14,7 +14,23 @@ describe('test the creation broker reducer', () => {
       payload: false,
     });
     expect(newState2.cr.spec.adminUser).toBe('admin');
+    expect(newState2.cr.spec.deploymentPlan.extraMounts).toBe(undefined);
     expect(newState2.cr.spec.deploymentPlan.podSecurity).toBe(undefined);
+  });
+  it('test setting jaas config', () => {
+    const initialState = newArtemisCR('namespace');
+    const newState = reducer713(initialState, {
+      operation: ArtemisReducerOperations713.setJaasExtraConfig,
+      payload: 'something',
+    });
+    expect(newState.cr.spec.deploymentPlan.extraMounts.secrets[0]).toBe(
+      'something',
+    );
+    const newState2 = reducer713(newState, {
+      operation: ArtemisReducerOperations713.setJaasExtraConfig,
+      payload: undefined,
+    });
+    expect(newState2.cr.spec.deploymentPlan.extraMounts).toBe(undefined);
   });
   it('test setting service account', () => {
     const initialState = newArtemisCR('namespace');

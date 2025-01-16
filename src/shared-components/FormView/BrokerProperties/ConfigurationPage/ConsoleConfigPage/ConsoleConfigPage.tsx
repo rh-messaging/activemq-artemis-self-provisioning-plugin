@@ -25,6 +25,7 @@ import { CertSecretSelector } from '../CertSecretSelector/CertSecretSelector';
 import { useTranslation } from '@app/i18n/i18n';
 import { ArtemisReducerOperations713 } from '@app/reducers/7.13/reducer';
 import { ServiceAccountSelector } from './ServiceAccountSelector';
+import { SelectUserMappings } from './UserMappings';
 
 export type ConsoleConfigProps = {
   brokerId: number;
@@ -218,6 +219,7 @@ export const ConsoleConfigPage: FC<ConsoleConfigProps> = ({ brokerId }) => {
               }
             >
               <ServiceAccountSelector />
+              <SelectUserMappings />
             </FormFieldGroup>
           )}
         </FormFieldGroupExpandable>

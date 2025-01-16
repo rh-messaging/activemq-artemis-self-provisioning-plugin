@@ -5,6 +5,7 @@ import { FormState713 } from './import-types';
 export enum ArtemisReducerOperations713 {
   isUsingToken = 2000,
   setServiceAccount,
+  setJaasExtraConfig,
 }
 
 export type ReducerActionBase = {
@@ -23,10 +24,17 @@ interface SetServiceAccountAction extends ReducerActionBase {
   payload: string;
 }
 
+interface SetJaasExtraConfigAction extends ReducerActionBase {
+  operation: ArtemisReducerOperations713.setJaasExtraConfig;
+  /** The name of the secret for the jass login module*/
+  payload: string;
+}
+
 // 7.13 is 7.12 + extras
 export type ArtemisReducerActions713 =
   | ArtemisReducerActions712
   | IsUsingTokenAction
+  | SetJaasExtraConfigAction
   | SetServiceAccountAction;
 
 export const reducer713: React.Reducer<
@@ -45,6 +53,15 @@ export const reducer713: React.Reducer<
         formState.cr.spec.adminUser = 'admin';
         delete formState.cr.spec.deploymentPlan.extraMounts;
         delete formState.cr.spec.deploymentPlan.podSecurity;
+      }
+      return formState;
+    case ArtemisReducerOperations713.setJaasExtraConfig:
+      if (!action.payload) {
+        delete formState.cr.spec.deploymentPlan.extraMounts;
+      } else {
+        formState.cr.spec.deploymentPlan.extraMounts = {
+          secrets: [action.payload],
+        };
       }
       return formState;
     case ArtemisReducerOperations713.setServiceAccount:

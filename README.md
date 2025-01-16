@@ -219,3 +219,89 @@ project keeps a copy of the version of the api server it is compatible with
 under `api-server/openapi.yml`.
 This files needs to be kept in sync when upgrades on the api-server are
 performed.
+
+## Configuring a Broker for token reviews
+
+### Service account
+
+If you want to have a broker that is able to perform a token review, you will
+need to have access to a service account with enough rights. To create one,
+execute the following YAML on your environment:
+
+```yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ex-aao-sa
+  namespace: default
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: ex-aao-sa-crb
+subjects:
+  - kind: ServiceAccount
+    name: ex-aao-sa
+    namespace: default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: 'system:auth-delegator'
+```
+
+Important:
+
+- The service account must reside in the same namespace as the broker you want
+  to deploy.
+- The role binding to 'system:auth-delegator' has to be cluster wide otherwise
+  the broker won't be allowed to perform token reviews.
+
+### Broker env
+
+While we wait for the `7.13` broker to get available, any broker that intends to
+perform a token review should have the following env in its spec:
+
+```yaml
+  env:
+    - name: KUBERNETES_CA_PATH
+      value: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+    - name: KUBERNETES_SERVICE_HOST
+      value: "api.crc.testing"
+    - name: KUBERNETES_SERVICE_PORT
+      value: "6443"
+```
+
+### An example of valid YAML for token reviews
+
+Assuming you have the service account `ex-aao-sa` available in the same
+namespace as the broker you want to deploy and that you have created with the UI
+a custom jaas config allowing your username to have admin access to the broker,
+your YAML should look like this.
+
+```yaml
+apiVersion: broker.amq.io/v1beta1
+kind: ActiveMQArtemis
+metadata:
+  name: ex-aao
+  namespace: default
+spec:
+  env:
+    - name: KUBERNETES_CA_PATH
+      value: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+    - name: KUBERNETES_SERVICE_HOST
+      value: "api.crc.testing"
+    - name: KUBERNETES_SERVICE_PORT
+      value: "6443"
+  ingressDomain: apps-crc.testing
+  console:
+    expose: true
+  deploymentPlan:
+    image: placeholder
+    requireLogin: false
+    size: 1
+    podSecurity:
+      serviceAccountName: ex-aao-sa
+    extraMounts:
+      secrets:
+        - custom-jaas-config
+```

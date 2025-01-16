@@ -101,6 +101,9 @@ export type BrokerCR = K8sResourceCommon & {
       podSecurity?: {
         serviceAccountName?: string;
       };
+      extraMounts?: {
+        secrets?: string[];
+      };
     };
   };
   status?: { [key: string]: any };
@@ -133,6 +136,14 @@ export type SecretResource = K8sResourceCommon & {
     'ca.crt'?: string;
     'tls.crt'?: string;
     'tls.key'?: string;
+  };
+};
+
+export type ConfigMapSecretResource = K8sResourceCommon & {
+  kind: 'Secret';
+  data?: {
+    'login.config'?: string;
+    'k8s-roles.properties'?: string;
   };
 };
 
