@@ -9,6 +9,7 @@ import {
   InputGroup,
   InputGroupText,
   NumberInput,
+  PageSection,
   TextInput,
 } from '@patternfly/react-core';
 import { FC, useContext } from 'react';
@@ -53,7 +54,7 @@ export const FormView: FC = () => {
     <>
       <Form isHorizontal>
         <FormFieldGroup>
-          <Grid lg={6} xl2={3}>
+          <Grid lg={6} xl2={3} hasGutter>
             <FormGroup
               label={t('CR Name')}
               isRequired
@@ -124,21 +125,19 @@ export const FormView: FC = () => {
           </Grid>
         </FormFieldGroup>
       </Form>
-      <Form isHorizontal>
-        <Banner variant={'blue'}>
-          <b>{crName}</b>
-          {t(' in namespace ')}
-          <b>{targetNs}</b>
-        </Banner>
-        <FormFieldGroup>
-          <BrokerProperties
-            brokerId={0}
-            perBrokerProperties={false}
-            crName={crName}
-            targetNs={targetNs}
-          />
-        </FormFieldGroup>
-      </Form>
+      <Banner variant={'blue'}>
+        <b>{crName}</b>
+        {t(' in namespace ')}
+        <b>{targetNs}</b>
+      </Banner>
+      <PageSection hasOverflowScroll isFilled>
+        <BrokerProperties
+          brokerId={0}
+          perBrokerProperties={false}
+          crName={crName}
+          targetNs={targetNs}
+        />
+      </PageSection>
     </>
   );
 };

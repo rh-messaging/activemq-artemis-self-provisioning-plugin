@@ -1,8 +1,9 @@
 import {
   JumpLinks,
   JumpLinksItem,
-  Split,
-  SplitItem,
+  Sidebar,
+  SidebarContent,
+  SidebarPanel,
 } from '@patternfly/react-core';
 import { CSSProperties, FC, useState } from 'react';
 import {
@@ -34,8 +35,8 @@ export const BrokerProperties: FC<BrokerIDProp> = ({
   );
 
   return (
-    <Split hasGutter>
-      <SplitItem>
+    <Sidebar hasBorder>
+      <SidebarPanel>
         <JumpLinks isVertical aria-label="Broker Config List">
           <JumpLinksItem
             onClick={() => setCurrentConfigItem(ConfigType.acceptors)}
@@ -71,14 +72,14 @@ export const BrokerProperties: FC<BrokerIDProp> = ({
             {t('Console')}
           </JumpLinksItem>
         </JumpLinks>
-      </SplitItem>
-      <SplitItem>
+      </SidebarPanel>
+      <SidebarContent>
         <GetConfigurationPage
           target={currentConfigItem}
           isPerBrokerConfig={perBrokerProperties}
           brokerId={brokerId}
         />
-      </SplitItem>
-    </Split>
+      </SidebarContent>
+    </Sidebar>
   );
 };

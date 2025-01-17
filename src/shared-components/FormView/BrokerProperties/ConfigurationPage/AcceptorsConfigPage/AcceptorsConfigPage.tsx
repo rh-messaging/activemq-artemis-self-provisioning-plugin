@@ -15,7 +15,6 @@ import {
   EmptyStateBody,
   EmptyStateIcon,
   EmptyStateVariant,
-  Form,
   EmptyStateHeader,
   EmptyStateFooter,
 } from '@patternfly/react-core';
@@ -76,7 +75,7 @@ export const AcceptorsConfigPage: FC<AcceptorsConfigProps> = ({ brokerId }) => {
   }
 
   return (
-    <Form isHorizontal isWidthLimited>
+    <>
       {configs.map((config, index) => {
         return (
           <AcceptorConfigSection
@@ -91,6 +90,6 @@ export const AcceptorsConfigPage: FC<AcceptorsConfigProps> = ({ brokerId }) => {
           {t('Add')} {pronoun} {name}
         </Button>
       </ActionGroup>
-    </Form>
+    </>
   );
 };

@@ -106,7 +106,7 @@ export const ConsoleConfigPage: FC<ConsoleConfigProps> = ({ brokerId }) => {
   }
 
   return (
-    <Form isHorizontal isWidthLimited key={'form' + brokerId}>
+    <Form isHorizontal key={'form' + brokerId}>
       <FormFieldGroupExpandable
         isExpanded
         header={
