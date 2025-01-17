@@ -5,6 +5,7 @@ import {
   reducer712 as reducer712,
 } from './7.12/reducer';
 import {
+  ArtemisReducerOperations713,
   areMandatoryValuesSet713,
   reducer713 as reducer713,
 } from './7.13/reducer';
@@ -100,6 +101,14 @@ export const artemisCrReducer: React.Reducer<FormState, ReducerActions> = (
   switch (action.operation) {
     case ArtemisReducerGlobalOperations.setBrokerVersion:
       formState.brokerVersion = action.payload;
+      // when switching back to 7.12, we need to make sure we don't leave config
+      // set for 7.13
+      if (action.payload === '7.12') {
+        return reducer713(formState as FormState713, {
+          operation: ArtemisReducerOperations713.isUsingToken,
+          payload: false,
+        });
+      }
       return formState;
     case ArtemisReducerGlobalOperations.setYamlHasUnsavedChanges:
       formState.yamlHasUnsavedChanges = true;
