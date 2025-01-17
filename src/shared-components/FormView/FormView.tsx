@@ -9,15 +9,11 @@ import {
   InputGroup,
   InputGroupText,
   NumberInput,
-  Switch,
   TextInput,
 } from '@patternfly/react-core';
-import { FC, useContext, useState } from 'react';
+import { FC, useContext } from 'react';
 import { ArtemisReducerOperations712 as ArtemisReducerOperations712 } from '@app/reducers/7.12/reducer';
-import {
-  BrokerProperties,
-  BrokerPropertiesList,
-} from './BrokerProperties/BrokerProperties';
+import { BrokerProperties } from './BrokerProperties/BrokerProperties';
 import { useTranslation } from '@app/i18n/i18n';
 import {
   ArtemisReducerGlobalOperations,
@@ -39,15 +35,6 @@ export const FormView: FC = () => {
     });
   };
 
-  const [isPerBrokerConfig, setIsPerBrokerConfig] = useState<boolean>(false);
-
-  const handleChange = (
-    checked: boolean,
-    _event: React.FormEvent<HTMLInputElement>,
-  ) => {
-    setIsPerBrokerConfig(checked);
-  };
-
   const onChangeVersion = (value: '7.12' | '7.13') => {
     dispatch({
       operation: ArtemisReducerGlobalOperations.setBrokerVersion,
@@ -64,9 +51,9 @@ export const FormView: FC = () => {
   const replicas = formState.cr.spec.deploymentPlan.size;
   return (
     <>
-      <Form isHorizontal isWidthLimited>
+      <Form isHorizontal>
         <FormFieldGroup>
-          <Grid hasGutter md={6}>
+          <Grid lg={6} xl2={3}>
             <FormGroup
               label={t('CR Name')}
               isRequired
@@ -134,19 +121,6 @@ export const FormView: FC = () => {
                 </FormSelect>
               </InputGroup>
             </FormGroup>
-            <FormGroup label={t('Per broker config')}>
-              <Switch
-                id="simple-switch"
-                label="enabled"
-                labelOff="disabled"
-                isChecked={isPerBrokerConfig}
-                onChange={(_event, checked: boolean) =>
-                  handleChange(checked, _event)
-                }
-                ouiaId="BasicSwitch"
-                isDisabled={replicas <= 1}
-              />
-            </FormGroup>
           </Grid>
         </FormFieldGroup>
       </Form>
@@ -157,20 +131,12 @@ export const FormView: FC = () => {
           <b>{targetNs}</b>
         </Banner>
         <FormFieldGroup>
-          {isPerBrokerConfig && replicas > 1 ? (
-            <BrokerPropertiesList
-              replicas={replicas}
-              crName={crName}
-              targetNs={targetNs}
-            />
-          ) : (
-            <BrokerProperties
-              brokerId={0}
-              perBrokerProperties={false}
-              crName={crName}
-              targetNs={targetNs}
-            />
-          )}
+          <BrokerProperties
+            brokerId={0}
+            perBrokerProperties={false}
+            crName={crName}
+            targetNs={targetNs}
+          />
         </FormFieldGroup>
       </Form>
     </>
