@@ -1,6 +1,11 @@
-import { useK8sWatchResource } from '@openshift-console/dynamic-plugin-sdk';
+import {
+  useAnnotationsModal,
+  useK8sWatchResource,
+  useLabelsModal,
+} from '@openshift-console/dynamic-plugin-sdk';
 import {
   Bullseye,
+  Button,
   Card,
   CardBody,
   CardTitle,
@@ -12,8 +17,12 @@ import {
   DescriptionListDescription,
   DescriptionListGroup,
   DescriptionListTerm,
+  Divider,
+  Label,
+  LabelGroup,
   List,
   ListItem,
+  PageSection,
   Spinner,
   Title,
 } from '@patternfly/react-core';
@@ -32,6 +41,7 @@ import {
 import { Metrics } from './Metrics/Metrics';
 import { useTranslation } from '@app/i18n/i18n';
 import { ConditionsContainer } from '@app/brokers/broker-details/components/Overview/Conditions/Conditions.container';
+import { useNavigate } from 'react-router-dom-v5-compat';
 
 const useGetIssuerCa = (
   cr: BrokerCR,
@@ -187,7 +197,7 @@ const ConnectivityHelper: FC<IssuerSecretsDownloaderProps> = ({ cr }) => {
     return <></>;
   }
   return (
-    <>
+    <PageSection>
       <Title headingLevel="h2">{t('Connectivity')}</Title>
       <Card>
         <>
@@ -217,7 +227,81 @@ const ConnectivityHelper: FC<IssuerSecretsDownloaderProps> = ({ cr }) => {
           </CardBody>
         </>
       </Card>
-    </>
+    </PageSection>
+  );
+};
+
+const Annotations: FC<IssuerSecretsDownloaderProps> = ({ cr }) => {
+  const { t } = useTranslation();
+  const launchAnnotationModal = useAnnotationsModal(cr);
+  return (
+    <DescriptionListGroup>
+      <DescriptionListTerm>{t('Annotations')}</DescriptionListTerm>
+      <DescriptionListDescription>
+        <LabelGroup
+          categoryName={t('Annotations')}
+          addLabelControl={
+            <Button variant="link" onClick={launchAnnotationModal}>
+              {t('Edit')}
+            </Button>
+          }
+        >
+          {cr.metadata.annotations ? (
+            Object.entries(cr.metadata.annotations).map(
+              (annotations, index) => (
+                <Label key={index} variant="filled">
+                  {annotations[1] ? annotations.join('=') : annotations[0]}
+                </Label>
+              ),
+            )
+          ) : (
+            <Label isCompact>{t('No annotations')}</Label>
+          )}
+        </LabelGroup>
+      </DescriptionListDescription>
+    </DescriptionListGroup>
+  );
+};
+
+const Labels: FC<IssuerSecretsDownloaderProps> = ({ cr }) => {
+  const navigate = useNavigate();
+  const { t } = useTranslation();
+  const launchLabelsModal = useLabelsModal(cr);
+  return (
+    <DescriptionListGroup>
+      <DescriptionListTerm> {t('Labels')}</DescriptionListTerm>
+      <DescriptionListDescription>
+        <LabelGroup
+          categoryName={t('Labels')}
+          addLabelControl={
+            <Button variant="link" onClick={launchLabelsModal}>
+              {t('Edit')}
+            </Button>
+          }
+        >
+          {cr.metadata.labels ? (
+            Object.entries(cr.metadata.labels).map((label, index) => (
+              <Label
+                key={index}
+                onClick={() =>
+                  navigate(
+                    label[1]
+                      ? '/search?kind=broker.amq.io~v1beta1~ActiveMQArtemis&q=' +
+                          encodeURI(label.join('='))
+                      : '/search?kind=broker.amq.io~v1beta1~ActiveMQArtemis&q=' +
+                          encodeURI(label[0]),
+                  )
+                }
+              >
+                {label[1] ? label.join('=') : label[0]}
+              </Label>
+            ))
+          ) : (
+            <Label isCompact>{t('No labels')}</Label>
+          )}
+        </LabelGroup>
+      </DescriptionListDescription>
+    </DescriptionListGroup>
   );
 };
 
@@ -234,17 +318,32 @@ export const OverviewContainer: FC<OverviewContainerProps> = ({
   cr,
   loading,
 }) => {
+  const { t } = useTranslation();
   if (loading) return <Loading />;
 
   return (
-    <>
+    <PageSection type="tabs">
+      <PageSection>
+        <Title headingLevel="h2">{t('Details')}</Title>
+        <br />
+        <Card>
+          <CardBody>
+            <DescriptionList>
+              <Labels cr={cr} />
+              <Annotations cr={cr} />
+            </DescriptionList>
+          </CardBody>
+        </Card>
+      </PageSection>
+      <Divider />
       <Metrics
         name={name}
         namespace={namespace}
         size={cr.spec?.deploymentPlan?.size}
       />
+      <Divider />
       <ConnectivityHelper cr={cr} />
       <ConditionsContainer cr={cr} />
-    </>
+    </PageSection>
   );
 };

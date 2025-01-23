@@ -44,31 +44,18 @@ export const useGetBrokerCR = (
   brokerName: string,
   namespace: string,
 ): { brokerCr: BrokerCR; isLoading: boolean; error: string } => {
-  const [brokerDetails, setBrokerDetails] = useState<BrokerCR>({});
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string>('');
+  const [brokers, loaded, loadError] = useK8sWatchResource<BrokerCR>({
+    name: brokerName,
+    namespace: namespace,
+    groupVersionKind: {
+      kind: AMQBrokerModel.kind,
+      version: AMQBrokerModel.apiVersion,
+      group: AMQBrokerModel.apiGroup,
+    },
+    isList: false,
+  });
 
-  const k8sGetBroker = () => {
-    setLoading(true);
-    k8sGet({ model: AMQBrokerModel, name: brokerName, ns: namespace })
-      .then((broker: BrokerCR) => {
-        setBrokerDetails(broker as BrokerCR);
-      })
-      .catch((e) => {
-        setError(e.message);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  };
-
-  const [isFirstMount, setIsFirstMount] = useState(true);
-  if (isFirstMount) {
-    k8sGetBroker();
-    setIsFirstMount(false);
-  }
-
-  return { brokerCr: brokerDetails, isLoading: loading, error: error };
+  return { brokerCr: brokers, isLoading: !loaded, error: loadError };
 };
 
 export const useHasCertManager = (): {

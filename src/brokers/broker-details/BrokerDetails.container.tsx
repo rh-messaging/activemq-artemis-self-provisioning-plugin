@@ -6,6 +6,8 @@ import {
   Title,
   Spinner,
   Alert,
+  Divider,
+  PageSection,
 } from '@patternfly/react-core';
 import { useTranslation } from '@app/i18n/i18n';
 import { ClientsContainer } from './components/Clients/Clients.container';
@@ -24,7 +26,10 @@ import { useParams } from 'react-router-dom-v5-compat';
 import { JolokiaAuthentication } from '@app/jolokia/components/JolokiaAuthentication';
 import { useGetBrokerCR } from '@app/k8s/customHooks';
 import { BrokerCR } from '@app/k8s/types';
-import { HorizontalNav } from '@openshift-console/dynamic-plugin-sdk';
+import {
+  HorizontalNav,
+  ResourceIcon,
+} from '@openshift-console/dynamic-plugin-sdk';
 import { YamlContainer } from './components/yaml/Yaml.container';
 
 type AuthenticatedPageContentPropType = {
@@ -130,13 +135,15 @@ const AuthenticatedPageContent: FC<AuthenticatedPageContentPropType> = ({
 
   return (
     <>
-      <div className="pf-u-mt-md pf-u-mb-md">
+      <PageSection type="breadcrumb">
         <BrokerDetailsBreadcrumb name={name} namespace={namespace} />
-        <Title headingLevel="h2" className="pf-u-ml-md">
-          {t('Broker')} {name}
+        <Title headingLevel="h1" className="pf-u-ml-md">
+          <ResourceIcon kind="broker.amq.io~v1beta1~ActiveMQArtemis" /> {name}
         </Title>
-      </div>
+        <br />
+      </PageSection>
       {errorBrokerCr && <Alert variant="danger" title={errorBrokerCr} />}
+      <Divider inset={{ default: 'insetXs' }} />
       <HorizontalNav pages={pages} />
     </>
   );
