@@ -130,7 +130,7 @@ export const FormView: FC = () => {
         {t(' in namespace ')}
         <b>{targetNs}</b>
       </Banner>
-      <PageSection hasOverflowScroll isFilled>
+      <PageSection hasOverflowScroll isFilled type="wizard">
         <BrokerProperties
           brokerId={0}
           perBrokerProperties={false}

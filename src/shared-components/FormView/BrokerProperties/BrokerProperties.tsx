@@ -36,7 +36,7 @@ export const BrokerProperties: FC<BrokerIDProp> = ({
 
   return (
     <Sidebar hasBorder>
-      <SidebarPanel>
+      <SidebarPanel variant="sticky">
         <JumpLinks isVertical aria-label="Broker Config List">
           <JumpLinksItem
             onClick={() => setCurrentConfigItem(ConfigType.acceptors)}
@@ -73,7 +73,7 @@ export const BrokerProperties: FC<BrokerIDProp> = ({
           </JumpLinksItem>
         </JumpLinks>
       </SidebarPanel>
-      <SidebarContent>
+      <SidebarContent hasPadding>
         <GetConfigurationPage
           target={currentConfigItem}
           isPerBrokerConfig={perBrokerProperties}
