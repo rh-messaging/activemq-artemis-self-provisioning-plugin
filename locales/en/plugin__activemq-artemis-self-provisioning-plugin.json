@@ -222,9 +222,6 @@
   "Replicas": "Replicas",
   "Broker Version": "Broker Version",
   " in namespace ": " in namespace ",
-  "Save and proceed": "Save and proceed",
-  "Discard and proceed": "Discard and proceed",
-  "Keep editing": "Keep editing",
-  "The YAML editor contains pending modifications, manual saving is required.": "The YAML editor contains pending modifications, manual saving is required.",
-  "Any changes in the YAML view has to be manually saved to get taken into consideration.": "Any changes in the YAML view has to be manually saved to get taken into consideration."
+  "changes saved": "changes saved",
+  "success": "success"
 }
