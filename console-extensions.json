@@ -27,6 +27,17 @@
     }
   },
   {
+    "type": "console.page/resource/details",
+    "properties": {
+      "model": {
+        "group": "broker.amq.io",
+        "version": "v1beta1",
+        "kind": "ActiveMQArtemis"
+      },
+      "component": { "$codeRef": "BrokerDetailsContainer.App" }
+    }
+  },
+  {
     "type": "console.page/route",
     "properties": {
       "exact": false,
