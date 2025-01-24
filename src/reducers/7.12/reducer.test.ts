@@ -895,6 +895,35 @@ describe('test the creation broker reducer', () => {
       updatedAcceptorName.cr.spec.resourceTemplates[0].patch.spec.tls[0]
         .hosts[0],
     ).toBe('ing.' + 'bob' + '.' + 'bro' + '-0.' + 'space' + '.' + 'tttt.com');
+    // setting the trust secret doesn't change the values
+    const withTrustSecret = reducer712(updatedDomain, {
+      operation: ArtemisReducerOperations712.setAcceptorSecret,
+      payload: {
+        name: 'bob',
+        isCa: true,
+        secret: newOptionObject('toto'),
+      },
+    });
+    expect(withTrustSecret.cr.spec.acceptors[0].sslEnabled).toBe(true);
+    expect(withTrustSecret.cr.spec.acceptors[0].exposeMode).toBe(
+      ExposeMode.ingress,
+    );
+    expect(withTrustSecret.cr.spec.acceptors[0].ingressHost).toBe(
+      'ing.$(ITEM_NAME).$(CR_NAME)-$(BROKER_ORDINAL).$(CR_NAMESPACE).$(INGRESS_DOMAIN)',
+    );
+    expect(withTrustSecret.cr.spec.acceptors[0].sslSecret).toBe(
+      'bro-bob-0-svc-ing-ptls',
+    );
+    expect(withTrustSecret.cr.spec.resourceTemplates).toHaveLength(1);
+    expect(withTrustSecret.cr.spec.resourceTemplates[0].selector.name).toBe(
+      'bro' + '-' + 'bob' + '-0-svc-ing',
+    );
+    expect(withTrustSecret.cr.spec.resourceTemplates[0].selector.name).toBe(
+      'bro' + '-' + 'bob' + '-0-svc-ing',
+    );
+    expect(
+      withTrustSecret.cr.spec.resourceTemplates[0].patch.spec.tls[0].hosts[0],
+    ).toBe('ing.' + 'bob' + '.' + 'bro' + '-0.' + 'space' + '.' + 'tttt.com');
   });
 
   it('test changing number of replicas while in the PEM preset gives the correct number of hosts', () => {
