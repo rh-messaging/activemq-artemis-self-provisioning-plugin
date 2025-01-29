@@ -79,8 +79,14 @@ export type ResourceTemplate = {
   };
 };
 
+export type Env = {
+  name: string;
+  value: string;
+};
+
 export type BrokerCR = K8sResourceCommon & {
   spec?: {
+    env?: Env[];
     ingressDomain?: string;
     connectors?: Connector[];
     acceptors?: Acceptor[];
@@ -143,7 +149,9 @@ export type ConfigMapSecretResource = K8sResourceCommon & {
   kind: 'Secret';
   data?: {
     'login.config'?: string;
-    'k8s-roles.properties'?: string;
+    'k8s-users-to-roles-mapping.properties'?: string;
+    'extra-roles.properties'?: string;
+    'extra-users.properties'?: string;
   };
 };
 

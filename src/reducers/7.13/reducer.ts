@@ -1,3 +1,4 @@
+import { BrokerCR } from '@app/k8s/types';
 import { ArtemisReducerActions712, reducer712 } from '../7.12/reducer';
 import { FormState713 } from './import-types';
 
@@ -6,6 +7,7 @@ export enum ArtemisReducerOperations713 {
   isUsingToken = 2000,
   setServiceAccount,
   setJaasExtraConfig,
+  setSecurityRoles,
 }
 
 export type ReducerActionBase = {
@@ -30,11 +32,18 @@ interface SetJaasExtraConfigAction extends ReducerActionBase {
   payload: string;
 }
 
+interface SetSecurityRolesAction extends ReducerActionBase {
+  operation: ArtemisReducerOperations713.setSecurityRoles;
+  /** The name of the secret for the jass login module*/
+  payload: Map<string, string>;
+}
+
 // 7.13 is 7.12 + extras
 export type ArtemisReducerActions713 =
   | ArtemisReducerActions712
   | IsUsingTokenAction
   | SetJaasExtraConfigAction
+  | SetSecurityRolesAction
   | SetServiceAccountAction;
 
 export const reducer713: React.Reducer<
@@ -48,14 +57,22 @@ export const reducer713: React.Reducer<
       if (action.payload) {
         delete formState.cr.spec.adminPassword;
         delete formState.cr.spec.adminUser;
+        setEnvForTokenAuth(formState.cr);
       } else {
         formState.cr.spec.adminPassword = 'admin';
         formState.cr.spec.adminUser = 'admin';
         delete formState.cr.spec.deploymentPlan.extraMounts;
         delete formState.cr.spec.deploymentPlan.podSecurity;
+        // reinitialise the related fields
+        deleteEnvForTokenAuth(formState.cr);
+        // delete the security roles
+        replaceSecurityRoles(formState.cr, new Map());
       }
       return formState;
     case ArtemisReducerOperations713.setJaasExtraConfig:
+      // reset the security roles, they will be updated later when the secret is
+      // known
+      replaceSecurityRoles(formState.cr, new Map());
       if (!action.payload) {
         delete formState.cr.spec.deploymentPlan.extraMounts;
       } else {
@@ -63,6 +80,9 @@ export const reducer713: React.Reducer<
           secrets: [action.payload],
         };
       }
+      return formState;
+    case ArtemisReducerOperations713.setSecurityRoles:
+      replaceSecurityRoles(formState.cr, action.payload);
       return formState;
     case ArtemisReducerOperations713.setServiceAccount:
       if (!action.payload) {
@@ -93,4 +113,127 @@ export const areMandatoryValuesSet713 = (formState: FormState713) => {
     }
   }
   return true;
+};
+
+/**
+ * Add a JAVA_ARGS_APPEND env variable that contains the -Dhawtio.realm=token
+ * parameter. If the env already exists, the parameter is appended to it. If not
+ * it is created.
+ */
+const setEnvForTokenAuth = (cr: BrokerCR) => {
+  const basicJavaArgs = {
+    name: 'JAVA_ARGS_APPEND',
+    value: '-Dhawtio.realm=token',
+  };
+  if (!cr.spec.env) {
+    cr.spec.env = [basicJavaArgs];
+  } else {
+    const javaArgs = cr.spec.env.find((v) => v.name === 'JAVA_ARGS_APPEND');
+    if (javaArgs) {
+      if (!javaArgs.value.includes('-Dhawtio.realm=token')) {
+        javaArgs.value = javaArgs.value + ' ' + '-Dhawtio.realm=token';
+      }
+    } else {
+      cr.spec.env.push(basicJavaArgs);
+    }
+  }
+};
+
+/**
+ * Delete -Dhawtio.realm=token from the env JAVA_ARGS_APPEND. If it was the last
+ * argument of the env, delete the env.
+ */
+const deleteEnvForTokenAuth = (cr: BrokerCR) => {
+  if (cr.spec.env) {
+    const javaArgs = cr.spec.env.find((v) => v.name === 'JAVA_ARGS_APPEND');
+    if (javaArgs) {
+      if (javaArgs.value.includes('-Dhawtio.realm=token')) {
+        const splitValue = javaArgs.value.split(' ');
+        if (splitValue.length > 1) {
+          javaArgs.value = splitValue
+            .filter((v) => v !== '-Dhawtio.realm=token')
+            .join(' ');
+        } else {
+          cr.spec.env = cr.spec.env.filter(
+            (v) => v.name !== 'JAVA_ARGS_APPEND',
+          );
+        }
+      }
+    }
+    if (cr.spec.env.length === 0) {
+      delete cr.spec.env;
+    }
+  }
+};
+
+/**
+ * Return all the security roles of the CR as a Map<string, string>
+ */
+export const getSecurityRoles = (cr: BrokerCR) => {
+  if (cr.spec?.brokerProperties?.length > 0) {
+    return new Map<string, string>(
+      cr.spec.brokerProperties
+        .filter((property) => property.startsWith('securityRoles'))
+        .map((property) => {
+          const key = property.split('=')[0];
+          const value = property.split('=')[1];
+          return [key, value];
+        }),
+    );
+  }
+  return new Map<string, string>();
+};
+
+/**
+ * Replace all the security roles of the CR, order matters.
+ */
+export const replaceSecurityRoles = (
+  cr: BrokerCR,
+  newSecurityRoles: Map<string, string>,
+) => {
+  if (cr.spec?.brokerProperties?.length > 0) {
+    // delete all the previous security roles
+    cr.spec.brokerProperties = cr.spec.brokerProperties.filter(
+      (property) => !property.startsWith('securityRoles'),
+    );
+  }
+  if (newSecurityRoles) {
+    if (!cr.spec?.brokerProperties) {
+      cr.spec.brokerProperties = [];
+    }
+    newSecurityRoles.forEach((v, k) =>
+      cr.spec.brokerProperties.push(k + '=' + v),
+    );
+  }
+};
+
+/**
+ * Create a new set of security roles for a given list of roles coming from the
+ * jass config. The lines must contain a valid entry composed of
+ * $rolename=$users. The roles are extracted and then used to populate the
+ * security entries associated to them.
+ */
+export const getInitSecurityRoles = (lines: string[]) => {
+  const roles = lines
+    .filter((role) => role.includes('='))
+    .map((role) => role.split('=')[0]);
+  return roles
+    .map(
+      (role) =>
+        new Map([
+          ['securityRoles.*.' + role + '.browse', 'true'],
+          ['securityRoles.*.' + role + '.consume', 'true'],
+          ['securityRoles.*.' + role + '.createAddress', 'true'],
+          ['securityRoles.*.' + role + '.createDurableQueue', 'true'],
+          ['securityRoles.*.' + role + '.createNonDurableQueue', 'true'],
+          ['securityRoles.*.' + role + '.deleteAddress', 'true'],
+          ['securityRoles.*.' + role + '.deleteDurableQueue', 'true'],
+          ['securityRoles.*.' + role + '.deleteNonDurableQueue', 'true'],
+          ['securityRoles.*.' + role + '.edit', 'true'],
+          ['securityRoles.*.' + role + '.manage', 'true'],
+          ['securityRoles.*.' + role + '.send', 'true'],
+          ['securityRoles.*.' + role + '.view', 'true'],
+        ]),
+    )
+    .reduce((prev, current) => new Map([...prev, ...current]));
 };

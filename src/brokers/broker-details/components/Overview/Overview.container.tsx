@@ -4,6 +4,8 @@ import {
   useLabelsModal,
 } from '@openshift-console/dynamic-plugin-sdk';
 import {
+  Alert,
+  AlertVariant,
   Bullseye,
   Button,
   Card,
@@ -66,7 +68,7 @@ const useGetIssuerCa = (
 
 const useGetTlsSecret = (cr: BrokerCR, acceptor: Acceptor) => {
   const [secretName, hasSecretName] = useGetIssuerCa(cr, acceptor);
-  const [secrets] = useK8sWatchResource<SecretResource[]>({
+  const [secrets, loaded, loadError] = useK8sWatchResource<SecretResource[]>({
     groupVersionKind: {
       version: 'v1',
       kind: 'Secret',
@@ -76,23 +78,23 @@ const useGetTlsSecret = (cr: BrokerCR, acceptor: Acceptor) => {
     namespace: cr.metadata.namespace,
   });
 
-  if ((hasSecretName && !secretName) || !secrets) {
-    return undefined;
-  }
-
   const secret = secrets.find((secret) => secret.metadata?.name === secretName);
 
-  if (!(secret && secret && secret.data && secret.data['tls.crt'])) {
-    return undefined;
+  if ((hasSecretName && !secretName) || !secrets) {
+    return [undefined, loaded, loadError];
   }
-  return secret;
+
+  if (!(secret && secret.data && secret.data['tls.crt'])) {
+    return [undefined, loaded, loadError];
+  }
+  return [secret, loaded, loadError];
 };
 
-type SecretDownloaLinkProps = {
+type SecretDownloadLinkProps = {
   secret: SecretResource;
 };
 
-const SecretDownloadLink: FC<SecretDownloaLinkProps> = ({ secret }) => {
+const SecretDownloadLink: FC<SecretDownloadLinkProps> = ({ secret }) => {
   return (
     <a
       href={
@@ -120,9 +122,10 @@ const HelpConnectAcceptor: FC<HelperConnectAcceptorProps> = ({
   acceptor,
 }) => {
   const { t } = useTranslation();
-  const secret = useGetTlsSecret(cr, acceptor);
+  const [secret, loaded, loadError] = useGetTlsSecret(cr, acceptor);
   const ingressHost = getIssuerIngressHostForAcceptor(cr, acceptor, 0);
   const [copied, setCopied] = useState(false);
+  const isSecuredByToken = cr.spec.adminUser === undefined;
 
   const clipboardCopyFunc = (text: string) => {
     navigator.clipboard.writeText(text.toString());
@@ -132,11 +135,18 @@ const HelpConnectAcceptor: FC<HelperConnectAcceptorProps> = ({
     clipboardCopyFunc(text);
     setCopied(true);
   };
-  if (!secret) {
+  if (!loaded || !secret) {
     return (
       <Bullseye>
         <Spinner size="lg" />
       </Bullseye>
+    );
+  }
+  if (loadError) {
+    return (
+      <Alert variant={AlertVariant.danger} title={t('Error loading secrets')}>
+        {loadError}
+      </Alert>
     );
   }
 
@@ -154,10 +164,34 @@ const HelpConnectAcceptor: FC<HelperConnectAcceptorProps> = ({
       <DescriptionListDescription>
         <List>
           <ListItem>
-            {t('Download the secret:')} <SecretDownloadLink secret={secret} />
+            {t('Download the cert:')} <SecretDownloadLink secret={secret} />
           </ListItem>
+          {isSecuredByToken && (
+            <ListItem>
+              {t(
+                'Your setup requires having a username and password for connecting to the acceptor',
+              )}
+              <Button
+                variant="link"
+                onClick={() =>
+                  window.open(
+                    'ns/' +
+                      cr.metadata.namespace +
+                      '/secrets/' +
+                      cr.spec.deploymentPlan.extraMounts.secrets[0],
+                  )
+                }
+              >
+                {t(
+                  'find one in the extra-users.properties entry of the jaas-config',
+                )}
+              </Button>
+            </ListItem>
+          )}
           <ListItem>
-            {t('Run the command with the secret')} (here in /tmp)
+            {t(
+              'Run the command below (it assumes that the cert is stored in /tmp)',
+            )}
             <CodeBlock
               actions={
                 <CodeBlockAction>
