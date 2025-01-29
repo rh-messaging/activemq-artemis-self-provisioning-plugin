@@ -3,11 +3,13 @@ import { FC, createContext } from 'react';
 import { Form, Text } from '@patternfly/react-core';
 import { AcceptorsConfigPage } from './AcceptorsConfigPage/AcceptorsConfigPage';
 import { ConsoleConfigPage } from './ConsoleConfigPage/ConsoleConfigPage';
+import { AccessControlPage } from './AccessControl/AccessControlPage';
 
 export const enum ConfigType {
   connectors = 'connectors',
   acceptors = 'acceptors',
   console = 'console',
+  rbac = 'rbac',
 }
 
 type BrokerConfigProps = {
@@ -20,7 +22,7 @@ export const ConfigTypeContext = createContext<ConfigType>(
   ConfigType.acceptors,
 );
 
-export const GetConfigurationPage: FC<BrokerConfigProps> = ({
+export const ConfigurationPage: FC<BrokerConfigProps> = ({
   brokerId,
   target,
   isPerBrokerConfig,
@@ -36,9 +38,9 @@ export const GetConfigurationPage: FC<BrokerConfigProps> = ({
     return (
       <Form isWidthLimited>
         <ConfigTypeContext.Provider value={configType}>
-          {target === 'console' ? (
-            <ConsoleConfigPage brokerId={brokerId} />
-          ) : (
+          {target === 'console' && <ConsoleConfigPage brokerId={brokerId} />}
+          {target === 'rbac' && <AccessControlPage />}
+          {['acceptors', 'connectors'].find((v) => v === target) && (
             <AcceptorsConfigPage brokerId={brokerId} />
           )}
         </ConfigTypeContext.Provider>

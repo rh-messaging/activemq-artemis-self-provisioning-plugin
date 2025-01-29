@@ -8,7 +8,7 @@ import {
 import { CSSProperties, FC, useState } from 'react';
 import {
   ConfigType,
-  GetConfigurationPage,
+  ConfigurationPage,
 } from './ConfigurationPage/ConfigurationPage';
 import { useTranslation } from '@app/i18n/i18n';
 
@@ -71,10 +71,21 @@ export const BrokerProperties: FC<BrokerIDProp> = ({
           >
             {t('Console')}
           </JumpLinksItem>
+          <JumpLinksItem
+            onClick={() => setCurrentConfigItem(ConfigType.rbac)}
+            isActive={currentConfigItem === ConfigType.rbac}
+            style={
+              {
+                listStyle: 'none' /* reset to patternfly default value*/,
+              } as CSSProperties
+            }
+          >
+            {t('rbac')}
+          </JumpLinksItem>
         </JumpLinks>
       </SidebarPanel>
       <SidebarContent hasPadding>
-        <GetConfigurationPage
+        <ConfigurationPage
           target={currentConfigItem}
           isPerBrokerConfig={perBrokerProperties}
           brokerId={brokerId}

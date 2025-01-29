@@ -23,9 +23,6 @@ import { BrokerCR } from '@app/k8s/types';
 import { ConfigType } from '../ConfigurationPage';
 import { CertSecretSelector } from '../CertSecretSelector/CertSecretSelector';
 import { useTranslation } from '@app/i18n/i18n';
-import { ArtemisReducerOperations713 } from '@app/reducers/7.13/reducer';
-import { ServiceAccountSelector } from './ServiceAccountSelector';
-import { SelectUserMappings } from './UserMappings';
 
 export type ConsoleConfigProps = {
   brokerId: number;
@@ -33,7 +30,7 @@ export type ConsoleConfigProps = {
 
 export const ConsoleConfigPage: FC<ConsoleConfigProps> = ({ brokerId }) => {
   const { t } = useTranslation();
-  const { cr, brokerVersion } = useContext(BrokerCreationFormState);
+  const { cr } = useContext(BrokerCreationFormState);
   const dispatch = useContext(BrokerCreationFormDispatch);
 
   const GetConsoleSSLEnabled = (brokerModel: BrokerCR): boolean => {
@@ -68,13 +65,6 @@ export const ConsoleConfigPage: FC<ConsoleConfigProps> = ({ brokerId }) => {
   const handleSSLEnabled = (value: boolean) => {
     dispatch({
       operation: ArtemisReducerOperations712.setConsoleSSLEnabled,
-      payload: value,
-    });
-  };
-
-  const handleAuthChange = (value: boolean) => {
-    dispatch({
-      operation: ArtemisReducerOperations713.isUsingToken,
       payload: value,
     });
   };
@@ -185,44 +175,6 @@ export const ConsoleConfigPage: FC<ConsoleConfigProps> = ({ brokerId }) => {
             configName={'console'}
           />
         </FormFieldGroup>
-      )}
-      {brokerVersion === '7.13' && (
-        <FormFieldGroupExpandable
-          isExpanded
-          header={
-            <FormFieldGroupHeader
-              titleText={{
-                text: t('Console authentication'),
-                id: 'field-group-consoleconfig' + 'console',
-              }}
-            />
-          }
-        >
-          <Switch
-            id={'id-switch-console-auth-token'}
-            label={t('Use token authentication for the console')}
-            labelOff={t(
-              'Use default username/password to authenticate on the console',
-            )}
-            isChecked={!cr.spec?.adminUser}
-            onChange={(_event, value: boolean) => handleAuthChange(value)}
-          />
-          {!cr.spec?.adminUser && (
-            <FormFieldGroup
-              header={
-                <FormFieldGroupHeader
-                  titleText={{
-                    text: t('Configuration for the token authentication'),
-                    id: 'field-group-configuration-token' + 'console',
-                  }}
-                />
-              }
-            >
-              <ServiceAccountSelector />
-              <SelectUserMappings />
-            </FormFieldGroup>
-          )}
-        </FormFieldGroupExpandable>
       )}
     </Form>
   );
