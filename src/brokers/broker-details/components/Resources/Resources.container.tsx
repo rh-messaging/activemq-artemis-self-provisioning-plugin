@@ -1,4 +1,4 @@
-import { FC, useEffect, useState } from 'react';
+import { FC, useState } from 'react';
 import {
   K8sResourceCommon,
   useK8sWatchResource,
@@ -39,6 +39,7 @@ export const ResourcesContainer: FC = () => {
     namespaced: true,
     namespace: namespace,
   });
+  const [prevSecrets, setPrevSecrets] = useState(secrets);
 
   // Fetch Services
   const [services, servicesLoaded, servicesLoadError] = useK8sWatchResource<
@@ -52,6 +53,7 @@ export const ResourcesContainer: FC = () => {
     namespaced: true,
     namespace: namespace,
   });
+  const [prevServices, setPrevServices] = useState(services);
 
   // Fetch StatefulSet
   const [statefulsets, statefulsetsLoaded, statefulsetsLoadError] =
@@ -64,6 +66,7 @@ export const ResourcesContainer: FC = () => {
       namespaced: true,
       namespace: namespace,
     });
+  const [prevStatefulStes, setPrevStatefulSets] = useState(statefulsets);
 
   // Filter Resources
   const filterBrokerResources = (
@@ -77,41 +80,71 @@ export const ResourcesContainer: FC = () => {
     );
   };
 
-  useEffect(() => {
-    if (
-      secretsLoaded &&
-      servicesLoaded &&
-      statefulsetsLoaded &&
-      !secretsLoadError &&
-      !servicesLoadError &&
-      !statefulsetsLoadError
-    ) {
-      setLoading(false);
-      const filteredBrokerSecrets = filterBrokerResources(secrets, name);
-      const filteredBrokerServices = filterBrokerResources(services, name);
-      const filteredBrokerStatefulSets = filterBrokerResources(
-        statefulsets,
-        name,
-      );
-      setFilteredResources([
-        ...filteredBrokerSecrets,
-        ...filteredBrokerServices,
-        ...filteredBrokerStatefulSets,
-      ]);
-    }
-  }, [
-    secrets,
-    services,
-    statefulsets,
-    name,
-    secretsLoaded,
-    servicesLoaded,
-    secretsLoadError,
-    servicesLoadError,
-    statefulsetsLoaded,
-    statefulsetsLoadError,
-  ]);
+  if (!servicesLoaded && servicesLoadError) {
+    return (
+      <EmptyState>
+        <EmptyStateHeader
+          titleText={t('Error while retrieving the services list.')}
+          icon={<EmptyStateIcon icon={ErrorCircleOIcon} />}
+          headingLevel="h4"
+        />
+        <EmptyStateBody>{servicesLoadError}</EmptyStateBody>
+      </EmptyState>
+    );
+  }
+  if (!secretsLoaded && secretsLoadError) {
+    return (
+      <EmptyState>
+        <EmptyStateHeader
+          titleText={t('Error while retrieving the secrets list.')}
+          icon={<EmptyStateIcon icon={ErrorCircleOIcon} />}
+          headingLevel="h4"
+        />
+        <EmptyStateBody>{servicesLoadError}</EmptyStateBody>
+      </EmptyState>
+    );
+  }
+  if (!statefulsetsLoaded && statefulsetsLoadError) {
+    return (
+      <EmptyState>
+        <EmptyStateHeader
+          titleText={t('Error while retrieving the stateful sets list.')}
+          icon={<EmptyStateIcon icon={ErrorCircleOIcon} />}
+          headingLevel="h4"
+        />
+        <EmptyStateBody>{statefulsetsLoadError}</EmptyStateBody>
+      </EmptyState>
+    );
+  }
 
+  let oneHasChanged = false;
+  if (secrets !== prevSecrets) {
+    oneHasChanged = true;
+    setPrevSecrets(secrets);
+  }
+  if (services !== prevServices) {
+    oneHasChanged = true;
+    setPrevServices(services);
+  }
+  if (statefulsets !== prevStatefulStes) {
+    oneHasChanged = true;
+    setPrevStatefulSets(statefulsets);
+  }
+  if (secretsLoaded && servicesLoaded && statefulsetsLoaded && oneHasChanged) {
+    setLoading(false);
+    const filteredBrokerSecrets = filterBrokerResources(secrets, name);
+    const filteredBrokerServices = filterBrokerResources(services, name);
+    const filteredBrokerStatefulSets = filterBrokerResources(
+      statefulsets,
+      name,
+    );
+
+    setFilteredResources([
+      ...filteredBrokerSecrets,
+      ...filteredBrokerServices,
+      ...filteredBrokerStatefulSets,
+    ]);
+  }
   return (
     <>
       <PageSection
@@ -119,16 +152,6 @@ export const ResourcesContainer: FC = () => {
         padding={{ default: 'noPadding' }}
         className="pf-c-page__main-tabs"
       >
-        {servicesLoadError && (
-          <EmptyState>
-            <EmptyStateHeader
-              titleText={t('Error while retrieving the resources list.')}
-              icon={<EmptyStateIcon icon={ErrorCircleOIcon} />}
-              headingLevel="h4"
-            />
-            <EmptyStateBody>{t('No results match.')}</EmptyStateBody>
-          </EmptyState>
-        )}
         {loading && !servicesLoadError && (
           <EmptyState>
             <EmptyStateHeader

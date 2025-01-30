@@ -66,19 +66,23 @@ const useGetIssuerCa = (
 
 const useGetTlsSecret = (cr: BrokerCR, acceptor: Acceptor) => {
   const [secretName, hasSecretName] = useGetIssuerCa(cr, acceptor);
-  const [secret] = useK8sWatchResource<SecretResource>({
+  const [secrets] = useK8sWatchResource<SecretResource[]>({
     groupVersionKind: {
       version: 'v1',
       kind: 'Secret',
     },
     name: secretName,
+    isList: true,
     namespace: cr.metadata.namespace,
   });
 
-  if (hasSecretName && !secretName) {
+  if ((hasSecretName && !secretName) || !secrets) {
     return undefined;
   }
-  if (!(secret && secret.data && secret.data['tls.crt'])) {
+
+  const secret = secrets.find((secret) => secret.metadata?.name === secretName);
+
+  if (!(secret && secret && secret.data && secret.data['tls.crt'])) {
     return undefined;
   }
   return secret;
