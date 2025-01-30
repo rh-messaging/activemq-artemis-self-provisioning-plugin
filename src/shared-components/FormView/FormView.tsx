@@ -130,7 +130,12 @@ export const FormView: FC = () => {
         {t(' in namespace ')}
         <b>{targetNs}</b>
       </Banner>
-      <PageSection hasOverflowScroll isFilled type="wizard">
+      <PageSection
+        hasOverflowScroll
+        isFilled
+        type="wizard"
+        aria-label={t('broker configuration')}
+      >
         <BrokerProperties
           brokerId={0}
           perBrokerProperties={false}

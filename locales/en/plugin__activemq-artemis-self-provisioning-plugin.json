@@ -230,6 +230,7 @@
   "Replicas": "Replicas",
   "Broker Version": "Broker Version",
   " in namespace ": " in namespace ",
+  "broker configuration": "broker configuration",
   "changes saved": "changes saved",
   "success": "success"
 }

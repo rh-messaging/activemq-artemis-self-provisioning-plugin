@@ -20,9 +20,7 @@ describe('ConditionsRow Component', () => {
     render(
       <table>
         <tbody>
-          <tr>
-            <ConditionsRow condition={mockCondition} />
-          </tr>
+          <ConditionsRow condition={mockCondition} />
         </tbody>
       </table>,
     );
