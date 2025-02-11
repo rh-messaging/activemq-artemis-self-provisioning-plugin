@@ -343,8 +343,8 @@ export const JolokiaAddressDetails: FC = () => {
       queryKey: [useJolokiaServiceGetAddressDetailsKey + selectedAddress],
       queryFn: () =>
         JolokiaService.getAddressDetails(
-          authContext.targetEndpoint,
           selectedAddress,
+          authContext.targetEndpoint,
         ),
       enabled: addressesSuccess && selectedAddress !== '',
     },
@@ -401,8 +401,8 @@ export const JolokiaAcceptorDetails: FC = () => {
       queryKey: [useJolokiaServiceGetAcceptorsKey + selectedAcceptor],
       queryFn: () =>
         JolokiaService.getAcceptorDetails(
-          authContext.targetEndpoint,
           selectedAcceptor,
+          authContext.targetEndpoint,
         ),
       enabled: isAcceptorsSuccess && selectedAcceptor !== '',
     },
@@ -461,9 +461,9 @@ export const JolokiaQueueDetails: FC = () => {
     queryKey: [useJolokiaServiceGetQueueDetailsKey + selectedQueue],
     queryFn: () =>
       JolokiaService.getQueueDetails(
-        authContext.targetEndpoint,
         queue.name,
         queue['routing-type'],
+        authContext.targetEndpoint,
         queue.address.name,
       ),
     enabled: queue !== undefined,
