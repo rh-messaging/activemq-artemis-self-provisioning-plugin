@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9/nodejs-20:latest AS build-image
+FROM registry-proxy.engineering.redhat.com/rh-osbs/rhacm2-yarn-builder@sha256:4f578a4e083bedd7467643b26bedf284f2d1062ed22416662d3556a3f4482cb1 AS build-image
 
 ### BEGIN REMOTE SOURCE
 # Use the COPY instruction only inside the REMOTE SOURCE block
@@ -35,7 +35,12 @@ USER 1001
 ENTRYPOINT ["nginx", "-g", "daemon off;"]
 
 ## Labels
-LABEL name="arkmq-org/activemq-artemis-self-provisioning-plugin"
-LABEL description="ActiveMQ Artemis Self Provisioning Plugin"
+LABEL name="amq-broker-7/amq-broker-713-self-provisioning-plugin-rhel9"
+LABEL description="Red Hat AMQ 7.13.0 Self Provisioning Plugin"
 LABEL maintainer="Roderick Kieley <rkieley@redhat.com>"
-LABEL version="0.5.2"
+LABEL version="7.13.0"
+LABEL summary="Red Hat AMQ 7.13.0 Self Provisioning Plugin"
+LABEL amq.broker.version="7.13.0.OPR.1.SR1"
+LABEL com.redhat.component="amq-broker-self-provisioning-plugin-rhel9-container"
+LABEL io.k8s.display-name="Red Hat AMQ 7.13.0 Self Provisioning Plugin"
+LABEL io.openshift.tags="messaging,amq,integration"
