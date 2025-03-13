@@ -1,16 +1,18 @@
 import React from 'react';
 import { Flex, Radio } from '@patternfly/react-core';
 import { useTranslation } from '@app/i18n/i18n';
-import { EditorType } from '@app/reducers/7.12/reducer';
+import { EditorType } from '@app/reducers/reducer';
 
 type EditorToggleProps = {
   value: EditorType;
   onChange?: (editorType: EditorType) => void;
+  isDisabled?: boolean;
 };
 
 export const EditorToggle: React.FC<EditorToggleProps> = ({
   value,
   onChange,
+  isDisabled,
 }) => {
   const { t } = useTranslation();
   const handleChange = (
@@ -35,6 +37,7 @@ export const EditorToggle: React.FC<EditorToggleProps> = ({
           label={t('Broker View')}
           id={EditorType.BROKER}
           value={EditorType.BROKER}
+          isDisabled={isDisabled}
         />
         <Radio
           isChecked={value === EditorType.YAML}
@@ -44,6 +47,7 @@ export const EditorToggle: React.FC<EditorToggleProps> = ({
           id={EditorType.YAML}
           value={EditorType.YAML}
           data-test={`${EditorType.YAML}-view-input`}
+          isDisabled={isDisabled}
         />
       </Flex>
     </div>

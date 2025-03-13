@@ -1,6 +1,13 @@
-import { useK8sWatchResource } from '@openshift-console/dynamic-plugin-sdk';
 import {
+  useAnnotationsModal,
+  useK8sWatchResource,
+  useLabelsModal,
+} from '@openshift-console/dynamic-plugin-sdk';
+import {
+  Alert,
+  AlertVariant,
   Bullseye,
+  Button,
   Card,
   CardBody,
   CardTitle,
@@ -12,19 +19,20 @@ import {
   DescriptionListDescription,
   DescriptionListGroup,
   DescriptionListTerm,
+  Divider,
+  Label,
+  LabelGroup,
   List,
   ListItem,
-  Page,
   PageSection,
   Spinner,
   Title,
 } from '@patternfly/react-core';
-import { FC, useContext, useState } from 'react';
+import { FC, useState } from 'react';
 import {
   getIssuerForAcceptor,
   getIssuerIngressHostForAcceptor,
 } from '@app/reducers/7.12/reducer';
-import { Loading } from '@app/shared-components/Loading/Loading';
 import {
   Acceptor,
   IssuerResource,
@@ -32,8 +40,9 @@ import {
   SecretResource,
 } from '@app/k8s/types';
 import { Metrics } from './Metrics/Metrics';
-import { AuthContext } from '@app/jolokia/context';
 import { useTranslation } from '@app/i18n/i18n';
+import { ConditionsContainer } from '@app/brokers/broker-details/components/Overview/Conditions/Conditions.container';
+import { useNavigate } from 'react-router-dom-v5-compat';
 
 const useGetIssuerCa = (
   cr: BrokerCR,
@@ -59,29 +68,33 @@ const useGetIssuerCa = (
 
 const useGetTlsSecret = (cr: BrokerCR, acceptor: Acceptor) => {
   const [secretName, hasSecretName] = useGetIssuerCa(cr, acceptor);
-  const [secret] = useK8sWatchResource<SecretResource>({
+  const [secrets, loaded, loadError] = useK8sWatchResource<SecretResource[]>({
     groupVersionKind: {
       version: 'v1',
       kind: 'Secret',
     },
     name: secretName,
+    isList: true,
     namespace: cr.metadata.namespace,
   });
 
-  if (hasSecretName && !secretName) {
-    return undefined;
+  const secret = secrets.find((secret) => secret.metadata?.name === secretName);
+
+  if ((hasSecretName && !secretName) || !secrets) {
+    return [undefined, loaded, loadError];
   }
+
   if (!(secret && secret.data && secret.data['tls.crt'])) {
-    return undefined;
+    return [undefined, loaded, loadError];
   }
-  return secret;
+  return [secret, loaded, loadError];
 };
 
-type SecretDownloaLinkProps = {
+type SecretDownloadLinkProps = {
   secret: SecretResource;
 };
 
-const SecretDownloadLink: FC<SecretDownloaLinkProps> = ({ secret }) => {
+const SecretDownloadLink: FC<SecretDownloadLinkProps> = ({ secret }) => {
   return (
     <a
       href={
@@ -109,10 +122,10 @@ const HelpConnectAcceptor: FC<HelperConnectAcceptorProps> = ({
   acceptor,
 }) => {
   const { t } = useTranslation();
-  const { podOrdinal } = useContext(AuthContext);
-  const secret = useGetTlsSecret(cr, acceptor);
-  const ingressHost = getIssuerIngressHostForAcceptor(cr, acceptor, podOrdinal);
+  const [secret, loaded, loadError] = useGetTlsSecret(cr, acceptor);
+  const ingressHost = getIssuerIngressHostForAcceptor(cr, acceptor, 0);
   const [copied, setCopied] = useState(false);
+  const isSecuredByToken = cr.spec.adminUser === undefined;
 
   const clipboardCopyFunc = (text: string) => {
     navigator.clipboard.writeText(text.toString());
@@ -122,11 +135,18 @@ const HelpConnectAcceptor: FC<HelperConnectAcceptorProps> = ({
     clipboardCopyFunc(text);
     setCopied(true);
   };
-  if (!secret) {
+  if (!loaded || !secret) {
     return (
       <Bullseye>
         <Spinner size="lg" />
       </Bullseye>
+    );
+  }
+  if (loadError) {
+    return (
+      <Alert variant={AlertVariant.danger} title={t('Error loading secrets')}>
+        {loadError}
+      </Alert>
     );
   }
 
@@ -144,10 +164,34 @@ const HelpConnectAcceptor: FC<HelperConnectAcceptorProps> = ({
       <DescriptionListDescription>
         <List>
           <ListItem>
-            {t('Download the secret:')} <SecretDownloadLink secret={secret} />
+            {t('Download the cert:')} <SecretDownloadLink secret={secret} />
           </ListItem>
+          {isSecuredByToken && (
+            <ListItem>
+              {t(
+                'Your setup requires having a username and password for connecting to the acceptor',
+              )}
+              <Button
+                variant="link"
+                onClick={() =>
+                  window.open(
+                    'ns/' +
+                      cr.metadata.namespace +
+                      '/secrets/' +
+                      cr.spec.deploymentPlan.extraMounts.secrets[0],
+                  )
+                }
+              >
+                {t(
+                  'find one in the extra-users.properties entry of the jaas-config',
+                )}
+              </Button>
+            </ListItem>
+          )}
           <ListItem>
-            {t('Run the command with the secret')} (here in /tmp)
+            {t(
+              'Run the command below (it assumes that the cert is stored in /tmp)',
+            )}
             <CodeBlock
               actions={
                 <CodeBlockAction>
@@ -190,46 +234,111 @@ const ConnectivityHelper: FC<IssuerSecretsDownloaderProps> = ({ cr }) => {
     return <></>;
   }
   return (
-    <>
-      <PageSection
-        hasOverflowScroll={true}
-        aria-label="secrets"
-        padding={{ default: 'noPadding' }}
-        className={
-          'pf-u-px-lg-on-xl pf-u-pt-sm-on-xl pf-u-pb-lg-on-xl pf-u-px-md pf-u-pb-md'
-        }
-      >
-        <Title headingLevel="h2">{t('Connectivity')}</Title>
-        <Card>
-          <>
-            <CardTitle>{t('Connect using Artemis')}</CardTitle>
-            <CardBody>
-              <DescriptionList>
-                <DescriptionListGroup>
-                  <DescriptionListTerm>{t('Get Artemis')}</DescriptionListTerm>
-                  <DescriptionListDescription>
-                    {t('Download the')}{' '}
-                    <a href="https://activemq.apache.org/components/artemis/download/">
-                      {t('latest release')}
-                    </a>{' '}
-                    {t(
-                      'of ActiveMQ Artemis, decompress the tarball and locate the artemis executable.',
-                    )}
-                  </DescriptionListDescription>
-                </DescriptionListGroup>
-                {cr.spec.acceptors.map((acceptor) => (
-                  <HelpConnectAcceptor
-                    cr={cr}
-                    acceptor={acceptor}
-                    key={acceptor.name}
-                  />
-                ))}
-              </DescriptionList>
-            </CardBody>
-          </>
-        </Card>
-      </PageSection>
-    </>
+    <PageSection>
+      <Title headingLevel="h2">{t('Connectivity')}</Title>
+      <Card>
+        <>
+          <CardTitle>{t('Connect using Artemis')}</CardTitle>
+          <CardBody>
+            <DescriptionList>
+              <DescriptionListGroup>
+                <DescriptionListTerm>{t('Get Artemis')}</DescriptionListTerm>
+                <DescriptionListDescription>
+                  {t('Download the')}{' '}
+                  <a href="https://activemq.apache.org/components/artemis/download/">
+                    {t('latest release')}
+                  </a>{' '}
+                  {t(
+                    'of ActiveMQ Artemis, decompress the tarball and locate the artemis executable.',
+                  )}
+                </DescriptionListDescription>
+              </DescriptionListGroup>
+              {cr.spec.acceptors.map((acceptor) => (
+                <HelpConnectAcceptor
+                  cr={cr}
+                  acceptor={acceptor}
+                  key={acceptor.name}
+                />
+              ))}
+            </DescriptionList>
+          </CardBody>
+        </>
+      </Card>
+    </PageSection>
+  );
+};
+
+const Annotations: FC<IssuerSecretsDownloaderProps> = ({ cr }) => {
+  const { t } = useTranslation();
+  const launchAnnotationModal = useAnnotationsModal(cr);
+  return (
+    <DescriptionListGroup>
+      <DescriptionListTerm>{t('Annotations')}</DescriptionListTerm>
+      <DescriptionListDescription>
+        <LabelGroup
+          categoryName={t('Annotations')}
+          addLabelControl={
+            <Button variant="link" onClick={launchAnnotationModal}>
+              {t('Edit')}
+            </Button>
+          }
+        >
+          {cr.metadata.annotations ? (
+            Object.entries(cr.metadata.annotations).map(
+              (annotations, index) => (
+                <Label key={index} variant="filled">
+                  {annotations[1] ? annotations.join('=') : annotations[0]}
+                </Label>
+              ),
+            )
+          ) : (
+            <Label isCompact>{t('No annotations')}</Label>
+          )}
+        </LabelGroup>
+      </DescriptionListDescription>
+    </DescriptionListGroup>
+  );
+};
+
+const Labels: FC<IssuerSecretsDownloaderProps> = ({ cr }) => {
+  const navigate = useNavigate();
+  const { t } = useTranslation();
+  const launchLabelsModal = useLabelsModal(cr);
+  return (
+    <DescriptionListGroup>
+      <DescriptionListTerm> {t('Labels')}</DescriptionListTerm>
+      <DescriptionListDescription>
+        <LabelGroup
+          categoryName={t('Labels')}
+          addLabelControl={
+            <Button variant="link" onClick={launchLabelsModal}>
+              {t('Edit')}
+            </Button>
+          }
+        >
+          {cr.metadata.labels ? (
+            Object.entries(cr.metadata.labels).map((label, index) => (
+              <Label
+                key={index}
+                onClick={() =>
+                  navigate(
+                    label[1]
+                      ? '/search?kind=broker.amq.io~v1beta1~ActiveMQArtemis&q=' +
+                          encodeURI(label.join('='))
+                      : '/search?kind=broker.amq.io~v1beta1~ActiveMQArtemis&q=' +
+                          encodeURI(label[0]),
+                  )
+                }
+              >
+                {label[1] ? label.join('=') : label[0]}
+              </Label>
+            ))
+          ) : (
+            <Label isCompact>{t('No labels')}</Label>
+          )}
+        </LabelGroup>
+      </DescriptionListDescription>
+    </DescriptionListGroup>
   );
 };
 
@@ -237,25 +346,38 @@ export type OverviewContainerProps = {
   namespace: string;
   name: string;
   cr: BrokerCR;
-  loading: boolean;
 };
 
 export const OverviewContainer: FC<OverviewContainerProps> = ({
   namespace,
   name,
   cr,
-  loading,
 }) => {
-  if (loading) return <Loading />;
+  const { t } = useTranslation();
 
   return (
-    <Page>
+    <PageSection type="tabs">
+      <PageSection>
+        <Title headingLevel="h2">{t('Details')}</Title>
+        <br />
+        <Card>
+          <CardBody>
+            <DescriptionList>
+              <Labels cr={cr} />
+              <Annotations cr={cr} />
+            </DescriptionList>
+          </CardBody>
+        </Card>
+      </PageSection>
+      <Divider />
       <Metrics
         name={name}
         namespace={namespace}
         size={cr.spec?.deploymentPlan?.size}
       />
+      <Divider />
       <ConnectivityHelper cr={cr} />
-    </Page>
+      <ConditionsContainer cr={cr} />
+    </PageSection>
   );
 };

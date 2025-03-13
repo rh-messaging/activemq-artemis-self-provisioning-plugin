@@ -69,6 +69,21 @@ export const SecretModel: K8sModel = {
   crd: true,
 };
 
+export const JaasConfigModule: K8sModel = {
+  apiGroup: SECRET_APIGROUP,
+  apiVersion: SECRET_VERSION,
+  kind: 'SecretList',
+  label: 'Secret',
+  labelKey: 'Secret',
+  labelPlural: 'Secrets',
+  labelPluralKey: 'Secrets',
+  plural: 'secrets',
+  id: 'secret',
+  abbr: 'S',
+  namespaced: true,
+  crd: true,
+};
+
 export const IngressDomainModel: K8sModel = {
   apiGroup: 'config.openshift.io',
   apiVersion: 'v1',

@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi8/nodejs-20:latest AS build-image
+FROM registry.access.redhat.com/ubi9/nodejs-20:latest AS build-image
 
 ### BEGIN REMOTE SOURCE
 # Use the COPY instruction only inside the REMOTE SOURCE block
@@ -26,7 +26,7 @@ RUN yarn install --network-timeout 1000000
 ## Build application
 RUN yarn build
 
-FROM registry.access.redhat.com/ubi8/nginx-120:latest
+FROM registry.access.redhat.com/ubi9/nginx-122:latest
 
 COPY --from=build-image /usr/src/app/dist /usr/share/nginx/html
 
@@ -35,7 +35,7 @@ USER 1001
 ENTRYPOINT ["nginx", "-g", "daemon off;"]
 
 ## Labels
-LABEL name="artemiscloud/activemq-artemis-self-provisioning-plugin"
+LABEL name="arkmq-org/activemq-artemis-self-provisioning-plugin"
 LABEL description="ActiveMQ Artemis Self Provisioning Plugin"
 LABEL maintainer="Roderick Kieley <rkieley@redhat.com>"
-LABEL version="0.3.0"
+LABEL version="0.5.3"

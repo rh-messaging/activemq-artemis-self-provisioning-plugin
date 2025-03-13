@@ -1,7 +1,10 @@
-#reload-object{
-    display: none;
+#save-changes {
+  display: none;
+}
+#reload-object {
+  display: none;
 }
 
-#cancel{
-    display: none;
+#cancel {
+  display: none;
 }

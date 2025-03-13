@@ -79,8 +79,14 @@ export type ResourceTemplate = {
   };
 };
 
+export type Env = {
+  name: string;
+  value: string;
+};
+
 export type BrokerCR = K8sResourceCommon & {
   spec?: {
+    env?: Env[];
     ingressDomain?: string;
     connectors?: Connector[];
     acceptors?: Acceptor[];
@@ -98,6 +104,12 @@ export type BrokerCR = K8sResourceCommon & {
       jolokiaAgentEnabled?: boolean;
       journalType?: string;
       managementRBACEnabled?: boolean;
+      podSecurity?: {
+        serviceAccountName?: string;
+      };
+      extraMounts?: {
+        secrets?: string[];
+      };
     };
   };
   status?: { [key: string]: any };
@@ -130,6 +142,16 @@ export type SecretResource = K8sResourceCommon & {
     'ca.crt'?: string;
     'tls.crt'?: string;
     'tls.key'?: string;
+  };
+};
+
+export type ConfigMapSecretResource = K8sResourceCommon & {
+  kind: 'Secret';
+  data?: {
+    'login.config'?: string;
+    'k8s-users-to-roles-mapping.properties'?: string;
+    'extra-roles.properties'?: string;
+    'extra-users.properties'?: string;
   };
 };
 

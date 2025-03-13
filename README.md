@@ -65,7 +65,7 @@ Clone the operator repository then run `./deploy/install_opr.sh` to install the
 operator onto your cluster.
 
 ```
-git clone git@github.com:artemiscloud/activemq-artemis-operator.git
+git clone git@github.com:arkmq-org/activemq-artemis-operator.git
 cd activemq-artemis-operator
 ./deploy/install_opr.sh
 ```
@@ -89,6 +89,22 @@ its functionalities.
 Navigate to the operatorHub on the console and search for `Cert-manager`.
 
 ### Running the plugin
+
+#### Download the secrets so that the bridge can authenticate the user with the api server backend
+
+1. For HTTP
+
+```
+cd bridge-auth-http
+./setup.sh
+```
+
+2. For HTTPS
+
+```
+cd bridge-auth-https
+./setup.sh
+```
 
 #### start the jolokia api-server
 
@@ -144,15 +160,15 @@ for details.
 
 1. Build the image:
    ```sh
-   docker build -t quay.io/artemiscloud/activemq-artemis-self-provisioning-plugin:latest .
+   docker build -t quay.io/arkmq-org/activemq-artemis-self-provisioning-plugin:latest .
    ```
 2. Run the image:
    ```sh
-   docker run -it --rm -d -p 9001:80 quay.io/artemiscloud/activemq-artemis-self-provisioning-plugin:latest
+   docker run -it --rm -d -p 9001:80 quay.io/arkmq-org/activemq-artemis-self-provisioning-plugin:latest
    ```
 3. Push the image to image registry:
    ```sh
-   docker push quay.io/artemiscloud/activemq-artemis-self-provisioning-plugin:latest
+   docker push quay.io/arkmq-org/activemq-artemis-self-provisioning-plugin:latest
    ```
 
 ## Deployment on cluster
@@ -174,7 +190,7 @@ You can deploy the plugin to a cluster by running this following command:
 Without any arguments, the plugin will run in https mode on port 9443.
 
 The optional `-i <image>` (or `--image <image>`) argument allows you to pass in the plugin image. If not specified the default
-`quay.io/artemiscloud/activemq-artemis-self-provisioning-plugin:latest` is deployed. for example:
+`quay.io/arkmq-org/activemq-artemis-self-provisioning-plugin:latest` is deployed. for example:
 
 ```sh
 ./deploy-plugin.sh -i quay.io/<repo-username>/activemq-artemis-self-provisioning-plugin:1.0.1
@@ -203,3 +219,89 @@ project keeps a copy of the version of the api server it is compatible with
 under `api-server/openapi.yml`.
 This files needs to be kept in sync when upgrades on the api-server are
 performed.
+
+## Configuring a Broker for token reviews
+
+### Service account
+
+If you want to have a broker that is able to perform a token review, you will
+need to have access to a service account with enough rights. To create one,
+execute the following YAML on your environment:
+
+```yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ex-aao-sa
+  namespace: default
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: ex-aao-sa-crb
+subjects:
+  - kind: ServiceAccount
+    name: ex-aao-sa
+    namespace: default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: 'system:auth-delegator'
+```
+
+Important:
+
+- The service account must reside in the same namespace as the broker you want
+  to deploy.
+- The role binding to 'system:auth-delegator' has to be cluster wide otherwise
+  the broker won't be allowed to perform token reviews.
+
+### Broker env
+
+While we wait for the `7.13` broker to get available, any broker that intends to
+perform a token review should have the following env in its spec:
+
+```yaml
+  env:
+    - name: KUBERNETES_CA_PATH
+      value: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+    - name: KUBERNETES_SERVICE_HOST
+      value: "api.crc.testing"
+    - name: KUBERNETES_SERVICE_PORT
+      value: "6443"
+```
+
+### An example of valid YAML for token reviews
+
+Assuming you have the service account `ex-aao-sa` available in the same
+namespace as the broker you want to deploy and that you have created with the UI
+a custom jaas config allowing your username to have admin access to the broker,
+your YAML should look like this.
+
+```yaml
+apiVersion: broker.amq.io/v1beta1
+kind: ActiveMQArtemis
+metadata:
+  name: ex-aao
+  namespace: default
+spec:
+  env:
+    - name: KUBERNETES_CA_PATH
+      value: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+    - name: KUBERNETES_SERVICE_HOST
+      value: "api.crc.testing"
+    - name: KUBERNETES_SERVICE_PORT
+      value: "6443"
+  ingressDomain: apps-crc.testing
+  console:
+    expose: true
+  deploymentPlan:
+    image: placeholder
+    requireLogin: false
+    size: 1
+    podSecurity:
+      serviceAccountName: ex-aao-sa
+    extraMounts:
+      secrets:
+        - custom-jaas-config
+```

@@ -10,13 +10,15 @@ import {
   FormFieldGroup,
   Modal,
   ModalVariant,
+  Tooltip,
 } from '@patternfly/react-core';
 import {
-  ArtemisReducerOperations,
+  ArtemisReducerGlobalOperations,
   BrokerCreationFormDispatch,
   BrokerCreationFormState,
   EditorType,
-} from '../../reducers/7.12/reducer';
+  areMandatoryValuesSet,
+} from '@app/reducers/reducer';
 import { FormView } from '../../shared-components/FormView/FormView';
 import { EditorToggle } from './components/EditorToggle/EditorToggle';
 import { Loading } from '../../shared-components/Loading/Loading';
@@ -57,11 +59,19 @@ export const AddBroker: FC<AddBrokerPropTypes> = ({
       setPendingActionQuittingYAMLView('switch');
     } else {
       dispatch({
-        operation: ArtemisReducerOperations.setEditorType,
+        operation: ArtemisReducerGlobalOperations.setEditorType,
         payload: EditorType.YAML,
       });
     }
   };
+
+  const onSubmitForFormView = () => {
+    // check that all required values are populated
+    if (areMandatoryValuesSet(formValues)) {
+      onSubmit();
+    }
+  };
+
   const [triggerDelayedSubmit, setTriggerDelayedSubmit] = useState(false);
   const [prevTriggerDelayedSubmit, setPrevTriggerDelayedSubmit] =
     useState(triggerDelayedSubmit);
@@ -69,7 +79,7 @@ export const AddBroker: FC<AddBrokerPropTypes> = ({
     if (pendingActionQuittingYAMLView === 'switch') {
       setWantsToQuitYamlView(false);
       dispatch({
-        operation: ArtemisReducerOperations.setEditorType,
+        operation: ArtemisReducerGlobalOperations.setEditorType,
         payload: EditorType.BROKER,
       });
     }
@@ -106,6 +116,10 @@ export const AddBroker: FC<AddBrokerPropTypes> = ({
       </Alert>
     );
   }
+  const navigationDisabled =
+    formValues.editorType === EditorType.BROKER
+      ? !areMandatoryValuesSet(formValues)
+      : false;
   return (
     <>
       <Modal
@@ -165,19 +179,34 @@ export const AddBroker: FC<AddBrokerPropTypes> = ({
       <Form>
         <FormFieldGroup>
           <ActionGroup>
-            <Button
-              variant={ButtonVariant.primary}
-              onClick={() => {
-                if (formValues.editorType === EditorType.YAML) {
-                  setWantsToQuitYamlView(true);
-                  setPendingActionQuittingYAMLView('submit');
-                } else {
-                  onSubmit();
-                }
-              }}
-            >
-              {isUpdatingExisting ? t('Apply') : t('Create')}
-            </Button>
+            {navigationDisabled ? (
+              <Tooltip
+                content={t(
+                  'Some mandatory fields are missing. Please fill them before proceeding.',
+                )}
+                trigger="mouseenter"
+              >
+                <span className="pf-u-pt-sm pf-u-pl-sm pf-u-pb-sm">
+                  <Button variant={ButtonVariant.primary} isDisabled>
+                    {isUpdatingExisting ? t('Apply') : t('Create')}
+                  </Button>
+                </span>
+              </Tooltip>
+            ) : (
+              <Button
+                variant={ButtonVariant.primary}
+                onClick={() => {
+                  if (formValues.editorType === EditorType.YAML) {
+                    setWantsToQuitYamlView(true);
+                    setPendingActionQuittingYAMLView('submit');
+                  } else {
+                    onSubmitForFormView();
+                  }
+                }}
+              >
+                {isUpdatingExisting ? t('Apply') : t('Create')}
+              </Button>
+            )}
             {isUpdatingExisting && (
               <Button
                 variant={ButtonVariant.secondary}

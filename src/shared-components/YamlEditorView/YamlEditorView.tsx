@@ -5,20 +5,14 @@ import {
   AlertGroup,
   AlertProps,
   AlertVariant,
-  Button,
-  Hint,
-  HintBody,
-  Modal,
-  ModalVariant,
-  Page,
   useInterval,
 } from '@patternfly/react-core';
 import { Loading } from '@app/shared-components/Loading/Loading';
 import {
-  ArtemisReducerOperations,
+  ArtemisReducerGlobalOperations,
   BrokerCreationFormDispatch,
   BrokerCreationFormState,
-} from '../../reducers/7.12/reducer';
+} from '@app/reducers/reducer';
 import YAML, { YAMLParseError } from 'yaml';
 import './YamlEditorView.css';
 import { ResourceYAMLEditor } from '@openshift-console/dynamic-plugin-sdk';
@@ -37,41 +31,6 @@ export const YamlEditorView: FC<YamlEditorViewPropTypes> = ({
   const { t } = useTranslation();
   const formState = useContext(BrokerCreationFormState);
   const dispatch = useContext(BrokerCreationFormDispatch);
-
-  const [isModalVisible, setIsModalVisible] = useState(false);
-
-  const [prevIsAskingPermissionToClose, setPrevIsAskingPermissionToClose] =
-    useState(isAskingPermissionToClose);
-  if (isAskingPermissionToClose !== prevIsAskingPermissionToClose) {
-    if (isAskingPermissionToClose) {
-      if (formState.yamlHasUnsavedChanges) {
-        setIsModalVisible(true);
-      } else {
-        permissionGranted();
-      }
-    }
-    setPrevIsAskingPermissionToClose(isAskingPermissionToClose);
-  }
-
-  const [currentYaml, setCurrentYaml] = useState<string>();
-  const [yamlParseError, setYamlParserError] = useState<YAMLParseError>();
-
-  const getUniqueId = () => new Date().getTime();
-
-  const updateModel = (content: string) => {
-    try {
-      dispatch({
-        operation: ArtemisReducerOperations.setModel,
-        payload: { model: YAML.parse(content), isSetByUser: true },
-      });
-      setYamlParserError(undefined);
-      addAlert('changes saved', 'success', getUniqueId());
-      return true;
-    } catch (e) {
-      setYamlParserError(e as YAMLParseError);
-      return false;
-    }
-  };
 
   const stringedFormState = YAML.stringify(formState.cr, null, '  ');
   const [alerts, setAlerts] = useState<Partial<AlertProps>[]>([]);
@@ -95,104 +54,86 @@ export const YamlEditorView: FC<YamlEditorViewPropTypes> = ({
     setAlerts(newAlerts);
   };
   useInterval(removeLastAlert, alerts.length > 0 ? 2000 : null);
+
+  const [currentYaml, setCurrentYaml] = useState<string>();
+  const [yamlParseError, setYamlParserError] = useState<YAMLParseError>();
+
+  const getUniqueId = () => new Date().getTime();
+
+  const updateModel = (content: string) => {
+    try {
+      dispatch({
+        operation: ArtemisReducerGlobalOperations.setModel,
+        payload: { model: YAML.parse(content), isSetByUser: true },
+      });
+      setYamlParserError(undefined);
+      addAlert(t('changes saved'), t('success'), getUniqueId());
+      return true;
+    } catch (e) {
+      setYamlParserError(e as YAMLParseError);
+      return false;
+    }
+  };
+
+  const [prevIsAskingPermissionToClose, setPrevIsAskingPermissionToClose] =
+    useState(isAskingPermissionToClose);
+  if (isAskingPermissionToClose !== prevIsAskingPermissionToClose) {
+    if (isAskingPermissionToClose) {
+      if (formState.yamlHasUnsavedChanges) {
+        if (updateModel(currentYaml)) {
+          permissionGranted();
+        } else {
+          permissionDenied();
+        }
+      } else {
+        permissionGranted();
+      }
+    }
+    setPrevIsAskingPermissionToClose(isAskingPermissionToClose);
+  }
+
   return (
     <>
-      <Page>
-        {yamlParseError !== undefined && (
+      {yamlParseError !== undefined && (
+        <Alert
+          title={yamlParseError.message}
+          variant={AlertVariant.danger}
+          isInline
+          actionClose
+          className="pf-u-mt-md pf-u-mx-md"
+        />
+      )}
+      <AlertGroup isToast isLiveRegion>
+        {alerts.map(({ key, variant, title }) => (
           <Alert
-            title={yamlParseError.message}
-            variant={AlertVariant.danger}
-            isInline
-            actionClose
-            className="pf-u-mt-md pf-u-mx-md"
+            variant={AlertVariant[variant]}
+            title={title}
+            actionClose={
+              <AlertActionCloseButton
+                title={title as string}
+                variantLabel={`${variant} alert`}
+                onClose={() => removeAlert(key)}
+              />
+            }
+            key={key}
           />
-        )}
-        <Modal
-          variant={ModalVariant.small}
-          title={t('Unsaved changes')}
-          isOpen={isModalVisible}
-          onClose={() => setIsModalVisible(false)}
-          actions={[
-            <Button
-              key="confirm"
-              variant="primary"
-              onClick={() => {
-                if (updateModel(currentYaml)) {
-                  permissionGranted();
-                } else {
-                  permissionDenied();
-                }
-                setIsModalVisible(false);
-              }}
-            >
-              {t('Save and proceed')}
-            </Button>,
-            <Button
-              key="confirm"
-              variant="danger"
-              onClick={() => {
-                setIsModalVisible(false);
-                permissionGranted();
-              }}
-            >
-              {t('Discard and proceed')}
-            </Button>,
-            <Button
-              key="cancel"
-              variant="link"
-              onClick={() => {
-                setIsModalVisible(false);
-                permissionDenied();
-              }}
-            >
-              {t('Keep editing')}
-            </Button>,
-          ]}
-        >
-          {t(
-            'The YAML editor contains pending modifications, manual saving is required.',
-          )}
-        </Modal>
-        {formState.yamlHasUnsavedChanges && (
-          <Hint>
-            <HintBody>
-              {t(
-                'Any changes in the YAML view has to be manually saved to get taken into consideration.',
-              )}
-            </HintBody>
-          </Hint>
-        )}
-        <AlertGroup isToast isLiveRegion>
-          {alerts.map(({ key, variant, title }) => (
-            <Alert
-              variant={AlertVariant[variant]}
-              title={title}
-              actionClose={
-                <AlertActionCloseButton
-                  title={title as string}
-                  variantLabel={`${variant} alert`}
-                  onClose={() => removeAlert(key)}
-                />
-              }
-              key={key}
-            />
-          ))}
-        </AlertGroup>
-        <Suspense fallback={<Loading />}>
-          <ResourceYAMLEditor
-            initialResource={YAML.stringify(formState.cr, null, '  ')}
-            onSave={updateModel}
-            onChange={(newContent: string) => {
-              setCurrentYaml(newContent);
-              if (stringedFormState !== newContent) {
-                dispatch({
-                  operation: ArtemisReducerOperations.setYamlHasUnsavedChanges,
-                });
-              }
-            }}
-          />
-        </Suspense>
-      </Page>
+        ))}
+      </AlertGroup>
+      <Suspense fallback={<Loading />}>
+        <ResourceYAMLEditor
+          initialResource={YAML.stringify(formState.cr, null, '  ')}
+          onSave={updateModel}
+          onChange={(newContent: string) => {
+            setCurrentYaml(newContent);
+            if (stringedFormState !== newContent) {
+              dispatch({
+                operation:
+                  ArtemisReducerGlobalOperations.setYamlHasUnsavedChanges,
+              });
+            }
+          }}
+        />
+      </Suspense>
     </>
   );
 };

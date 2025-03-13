@@ -1,7 +1,9 @@
 import {
-  ArtemisReducerOperations,
   BrokerCreationFormDispatch,
   BrokerCreationFormState,
+} from '@app/reducers/reducer';
+import {
+  ArtemisReducerOperations712,
   ExposeMode,
 } from '@app/reducers/7.12/reducer';
 
@@ -14,7 +16,6 @@ import {
   FormGroup,
   FormSelect,
   FormSelectOption,
-  Grid,
   Switch,
 } from '@patternfly/react-core';
 import { FC, useContext, useState } from 'react';
@@ -63,21 +64,21 @@ export const ConsoleConfigPage: FC<ConsoleConfigProps> = ({ brokerId }) => {
 
   const handleSSLEnabled = (value: boolean) => {
     dispatch({
-      operation: ArtemisReducerOperations.setConsoleSSLEnabled,
+      operation: ArtemisReducerOperations712.setConsoleSSLEnabled,
       payload: value,
     });
   };
 
   const setConsoleExpose = (value: boolean) => {
     dispatch({
-      operation: ArtemisReducerOperations.setConsoleExpose,
+      operation: ArtemisReducerOperations712.setConsoleExpose,
       payload: value,
     });
   };
 
   const setConsoleExposeMode = (value: ExposeMode) => {
     dispatch({
-      operation: ArtemisReducerOperations.setConsoleExposeMode,
+      operation: ArtemisReducerOperations712.setConsoleExposeMode,
       payload: value,
     });
   };
@@ -92,14 +93,10 @@ export const ConsoleConfigPage: FC<ConsoleConfigProps> = ({ brokerId }) => {
     setExecOnlyOnce(false);
     setConsoleExpose(exposeConsole);
     setConsoleExposeMode(exposeMode);
-    dispatch({
-      operation: ArtemisReducerOperations.setConsoleCredentials,
-      payload: { adminUser: 'admin', adminPassword: 'admin' },
-    });
   }
 
   return (
-    <Form isHorizontal isWidthLimited key={'form' + brokerId}>
+    <Form isHorizontal key={'form' + brokerId}>
       <FormFieldGroupExpandable
         isExpanded
         header={
@@ -111,52 +108,48 @@ export const ConsoleConfigPage: FC<ConsoleConfigProps> = ({ brokerId }) => {
           />
         }
       >
-        <Grid hasGutter md={6}>
-          <FormFieldGroup>
-            <FormGroup
-              label={t('Expose')}
-              fieldId={'console-config-expose-formgroup'}
-              isRequired
-            >
-              <Checkbox
-                label={t('Expose Console')}
-                isChecked={exposeConsole}
-                name={'check-console-expose'}
-                id={'check-expose-console'}
-                onChange={(_event, value: boolean) => setConsoleExpose(value)}
+        <FormGroup
+          label={t('Expose')}
+          fieldId={'console-config-expose-formgroup'}
+          isRequired
+        >
+          <Checkbox
+            label={t('Expose Console')}
+            isChecked={exposeConsole}
+            name={'check-console-expose'}
+            id={'check-expose-console'}
+            onChange={(_event, value: boolean) => setConsoleExpose(value)}
+          />
+        </FormGroup>
+        <FormGroup
+          label={t('ExposeMode')}
+          fieldId={'console-config-exposemode-formgroup'}
+        >
+          <FormSelect
+            label={t('console expose mode')}
+            value={exposeMode}
+            onChange={(_event, value: ExposeMode) =>
+              setConsoleExposeMode(value)
+            }
+            aria-label="formselect-expose-mode-aria-label"
+          >
+            {exposeModes.map((mode, index) => (
+              <FormSelectOption
+                key={'console-exposemode-option' + index}
+                value={mode.value}
+                label={mode.label}
               />
-            </FormGroup>
-            <FormGroup
-              label={t('ExposeMode')}
-              fieldId={'console-config-exposemode-formgroup'}
-            >
-              <FormSelect
-                label={t('console expose mode')}
-                value={exposeMode}
-                onChange={(_event, value: ExposeMode) =>
-                  setConsoleExposeMode(value)
-                }
-                aria-label="formselect-expose-mode-aria-label"
-              >
-                {exposeModes.map((mode, index) => (
-                  <FormSelectOption
-                    key={'console-exposemode-option' + index}
-                    value={mode.value}
-                    label={mode.label}
-                  />
-                ))}
-              </FormSelect>
-            </FormGroup>
-            <Switch
-              id={'id-switch-console-sslEnabled'}
-              label={t('SSL Enabled for console')}
-              labelOff="SSL disabled for console"
-              isChecked={isSSLEnabled}
-              onChange={(_event, value: boolean) => handleSSLEnabled(value)}
-              ouiaId="BasicSwitch-console-ssl"
-            />
-          </FormFieldGroup>
-        </Grid>
+            ))}
+          </FormSelect>
+        </FormGroup>
+        <Switch
+          id={'id-switch-console-sslEnabled'}
+          label={t('SSL Enabled for console')}
+          labelOff="SSL disabled for console"
+          isChecked={isSSLEnabled}
+          onChange={(_event, value: boolean) => handleSSLEnabled(value)}
+          ouiaId="BasicSwitch-console-ssl"
+        />
       </FormFieldGroupExpandable>
       {isSSLEnabled && (
         <FormFieldGroup

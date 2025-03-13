@@ -1,17 +1,14 @@
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionToggle,
   JumpLinks,
   JumpLinksItem,
-  Split,
-  SplitItem,
+  Sidebar,
+  SidebarContent,
+  SidebarPanel,
 } from '@patternfly/react-core';
 import { CSSProperties, FC, useState } from 'react';
 import {
   ConfigType,
-  GetConfigurationPage,
+  ConfigurationPage,
 } from './ConfigurationPage/ConfigurationPage';
 import { useTranslation } from '@app/i18n/i18n';
 
@@ -28,59 +25,6 @@ export type BrokerReplicasProp = {
   targetNs: string;
 };
 
-export const BrokerPropertiesList: FC<BrokerReplicasProp> = ({
-  replicas,
-  crName,
-  targetNs,
-}) => {
-  const [expanded, setExpanded] = useState(['ex2-toggle4']);
-
-  const toggle = (id: string) => {
-    const index = expanded.indexOf(id);
-    const newExpanded: string[] =
-      index >= 0
-        ? [
-            ...expanded.slice(0, index),
-            ...expanded.slice(index + 1, expanded.length),
-          ]
-        : [...expanded, id];
-    setExpanded(newExpanded);
-  };
-
-  const entries = [];
-  for (let i = 0; i < replicas; i++) {
-    const itemId = 'broker_' + +i;
-    entries.push(
-      <AccordionItem key={itemId}>
-        <AccordionToggle
-          onClick={() => toggle(itemId)}
-          isExpanded={expanded.includes(itemId)}
-          id={itemId}
-          key={itemId}
-          component={'text'}
-        >
-          {itemId}
-          <br />
-        </AccordionToggle>
-        <AccordionContent
-          id={itemId}
-          key={itemId}
-          isHidden={!expanded.includes(itemId)}
-        >
-          <BrokerProperties
-            brokerId={i}
-            perBrokerProperties={true}
-            crName={crName}
-            targetNs={targetNs}
-          />
-        </AccordionContent>
-      </AccordionItem>,
-    );
-  }
-
-  return <Accordion asDefinitionList={false}>{entries}</Accordion>;
-};
-
 export const BrokerProperties: FC<BrokerIDProp> = ({
   brokerId,
   perBrokerProperties,
@@ -91,8 +35,8 @@ export const BrokerProperties: FC<BrokerIDProp> = ({
   );
 
   return (
-    <Split hasGutter>
-      <SplitItem>
+    <Sidebar hasBorder>
+      <SidebarPanel variant="sticky">
         <JumpLinks isVertical aria-label="Broker Config List">
           <JumpLinksItem
             onClick={() => setCurrentConfigItem(ConfigType.acceptors)}
@@ -127,15 +71,26 @@ export const BrokerProperties: FC<BrokerIDProp> = ({
           >
             {t('Console')}
           </JumpLinksItem>
+          <JumpLinksItem
+            onClick={() => setCurrentConfigItem(ConfigType.rbac)}
+            isActive={currentConfigItem === ConfigType.rbac}
+            style={
+              {
+                listStyle: 'none' /* reset to patternfly default value*/,
+              } as CSSProperties
+            }
+          >
+            {t('rbac')}
+          </JumpLinksItem>
         </JumpLinks>
-      </SplitItem>
-      <SplitItem>
-        <GetConfigurationPage
+      </SidebarPanel>
+      <SidebarContent hasPadding>
+        <ConfigurationPage
           target={currentConfigItem}
           isPerBrokerConfig={perBrokerProperties}
           brokerId={brokerId}
         />
-      </SplitItem>
-    </Split>
+      </SidebarContent>
+    </Sidebar>
   );
 };
