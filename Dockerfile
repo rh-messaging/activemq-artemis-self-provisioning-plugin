@@ -35,12 +35,7 @@ USER 1001
 ENTRYPOINT ["nginx", "-g", "daemon off;"]
 
 ## Labels
-LABEL name="amq-broker-8/amq-broker-80-self-provisioning-plugin-rhel8"
-LABEL description="Red Hat AMQ 8.0 Self Provisioning Plugin"
+LABEL name="artemiscloud/activemq-artemis-self-provisioning-plugin"
+LABEL description="ActiveMQ Artemis Self Provisioning Plugin"
 LABEL maintainer="Roderick Kieley <rkieley@redhat.com>"
-LABEL version="8.0.0"
-LABEL summary="Red Hat AMQ 8.0 Self Provisioning Plugin"
-LABEL amq.broker.version="8.0.0.OPR.1.SR1"
-LABEL com.redhat.component="amq-broker-self-provisioning-plugin-rhel8-container"
-LABEL io.k8s.display-name="Red Hat AMQ OPR.1 Self Provisioning Plugin"
-LABEL io.openshift.tags="messaging,amq,integration"
+LABEL version="0.3.0"
