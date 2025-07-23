@@ -1,4 +1,3 @@
-import { SelectOptionObject } from '@patternfly/react-core/deprecated';
 import {
   ArtemisReducerOperations712,
   ExposeMode,
@@ -7,13 +6,6 @@ import {
 } from './reducer';
 
 describe('test the creation broker reducer', () => {
-  const newOptionObject = (value: string): SelectOptionObject => {
-    return {
-      toString() {
-        return value;
-      },
-    };
-  };
   it('test addAcceptor', () => {
     const initialState = newBroker712CR('namespace');
     const newState = reducer712(initialState, {
@@ -330,7 +322,7 @@ describe('test the creation broker reducer', () => {
       payload: {
         name: 'acceptors0',
         isCa: false,
-        secret: newOptionObject('toto'),
+        secret: 'toto',
       },
     });
     expect(newState2.cr.spec.acceptors[0].sslSecret).toBe('toto');
@@ -339,7 +331,7 @@ describe('test the creation broker reducer', () => {
       payload: {
         name: 'acceptors0',
         isCa: true,
-        secret: newOptionObject('toto'),
+        secret: 'toto',
       },
     });
     expect(newState3.cr.spec.acceptors[0].trustSecret).toBe('toto');
@@ -625,7 +617,7 @@ describe('test the creation broker reducer', () => {
       payload: {
         name: 'connectors0',
         isCa: false,
-        secret: newOptionObject('toto'),
+        secret: 'toto',
       },
     });
     expect(newState2.cr.spec.connectors[0].sslSecret).toBe('toto');
@@ -634,7 +626,7 @@ describe('test the creation broker reducer', () => {
       payload: {
         name: 'connectors0',
         isCa: true,
-        secret: newOptionObject('toto'),
+        secret: 'toto',
       },
     });
     expect(newState3.cr.spec.connectors[0].trustSecret).toBe('toto');
@@ -666,6 +658,15 @@ describe('test the creation broker reducer', () => {
     const initialState = newBroker712CR('namespace');
     const newState = reducer712(initialState, {
       operation: ArtemisReducerOperations712.setConsoleExposeMode,
+      payload: ExposeMode.route,
+    });
+    expect(newState.cr.spec.console.exposeMode).toBe(ExposeMode.route);
+  });
+
+  it('test setConsoleExposeMode', () => {
+    const initialState = newBroker712CR('namespace');
+    const newState = reducer712(initialState, {
+      operation: ArtemisReducerOperations712.setConsoleExposeMode,
       payload: ExposeMode.ingress,
     });
     expect(newState.cr.spec.console.exposeMode).toBe(ExposeMode.ingress);
@@ -687,7 +688,7 @@ describe('test the creation broker reducer', () => {
       payload: {
         name: 'console',
         isCa: true,
-        secret: newOptionObject('toto'),
+        secret: 'toto',
       },
     });
     expect(newState.cr.spec.console.trustSecret).toBe('toto');
@@ -901,7 +902,7 @@ describe('test the creation broker reducer', () => {
       payload: {
         name: 'bob',
         isCa: true,
-        secret: newOptionObject('toto'),
+        secret: 'toto',
       },
     });
     expect(withTrustSecret.cr.spec.acceptors[0].sslEnabled).toBe(true);
