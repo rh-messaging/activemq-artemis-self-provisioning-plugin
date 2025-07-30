@@ -1,6 +1,8 @@
 # ActiveMQ Artemis Self Provisioning Plugin
 
-This project is a ActiveMQ Artemis Self Provisioning Plugin to the Administrator perspective in OpenShift console. It requires OpenShift `4.16` to use.
+This project is a ActiveMQ Artemis Self Provisioning Plugin to the Administrator
+perspective in OpenShift console. It requires at least OpenShift `4.18` to use
+and is compatible with OpenShift `4.19`.
 
 ## Local development
 
