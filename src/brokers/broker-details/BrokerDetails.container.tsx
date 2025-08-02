@@ -47,9 +47,7 @@ const AuthenticatedPageContent: FC<AuthenticatedPageContentPropType> = ({
     {
       href: '',
       name: t('Overview'),
-      component: () => (
-        <OverviewContainer name={name} namespace={namespace} cr={brokerCr} />
-      ),
+      component: OverviewContainer,
     },
     {
       href: 'clients',
@@ -64,7 +62,7 @@ const AuthenticatedPageContent: FC<AuthenticatedPageContentPropType> = ({
     {
       href: 'yaml',
       name: t('YAML'),
-      component: () => <YamlContainer brokerCr={brokerCr} />,
+      component: YamlContainer,
     },
     {
       href: 'resources',
@@ -117,13 +115,13 @@ const AuthenticatedPageContent: FC<AuthenticatedPageContentPropType> = ({
 
   return (
     <>
-        <BrokerDetailsBreadcrumb name={name} namespace={namespace} />
-        <Title headingLevel="h1" className="pf-u-ml-md">
-          <ResourceIcon kind="broker.amq.io~v1beta1~ActiveMQArtemis" /> {name}
-        </Title>
-        <br />
+      <BrokerDetailsBreadcrumb name={name} namespace={namespace} />
+      <Title headingLevel="h1" className="pf-u-ml-md">
+        <ResourceIcon kind="broker.amq.io~v1beta1~ActiveMQArtemis" /> {name}
+      </Title>
+      <br />
       <Divider inset={{ default: 'insetXs' }} />
-      <HorizontalNav pages={pages} />
+      <HorizontalNav resource={brokerCr} pages={pages} />
     </>
   );
 };
