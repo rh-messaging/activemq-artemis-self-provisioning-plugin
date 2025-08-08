@@ -1,4 +1,4 @@
-FROM registry-proxy.engineering.redhat.com/rh-osbs/rhacm2-yarn-builder@sha256:c1678723b2a425c129ad180fcca772b061acf06a73b2e5ec76de078d6ae84643 AS build-image
+FROM registry-proxy.engineering.redhat.com/rh-osbs/rhacm2-yarn-builder@sha256:1aa37e258d99f102bebf8450d0e2e6d6e190f254301e2275be7af35851b70680 AS build-image
 
 ### BEGIN REMOTE SOURCE
 # Use the COPY instruction only inside the REMOTE SOURCE block
