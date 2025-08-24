@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: activemq-artemis-self-provisioning-plugin
-          image: registry.redhat.io/amq-broker-8/amq-broker-80-self-provisioning-plugin-rhel9@sha256:8bd942aa83dd4743e6fbfe9a3e46d3dfb03791bb7bcabb74a42b4043324213f8
+          image: registry.redhat.io/amq-broker-8/amq-broker-80-self-provisioning-plugin-rhel9@sha256:dafdcadfe7e56891860e587b8bbac0eb3e24a9bf0250dc4f1c014ba94ce71ad6
           ports:
             - containerPort: 9443
               protocol: TCP
