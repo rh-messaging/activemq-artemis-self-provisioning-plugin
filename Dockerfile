@@ -28,10 +28,13 @@ RUN yarn build
 
 FROM registry.access.redhat.com/ubi9/nginx-122:latest
 
-COPY --from=build-image /usr/src/app/dist /usr/share/nginx/html
+USER root
 
 ## Upgrade packages
-RUN microdnf update -y --setopt=install_weak_deps=0 && rm -rf /var/cache/yum
+RUN dnf update -y --setopt=install_weak_deps=0 && rm -rf /var/cache/yum
+
+COPY --from=build-image /usr/src/app/dist /usr/share/nginx/html
+
 
 USER 1001
 
