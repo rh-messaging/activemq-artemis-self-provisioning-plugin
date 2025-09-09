@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 
 TLS_ENABLED="true"
-DEFAULT_IMAGE="quay.io/arkmq-org/activemq-artemis-self-provisioning-plugin:latest"
+DEFAULT_IMAGE=registry.redhat.io/amq-broker-8/amq-broker-80-self-provisioning-plugin-rhel9@sha256:3102cc817eda6bf2f9785b25b5ced04594a6937fe4b57b358cbe4df8bdb2a553
 PLUGIN_IMAGE=${DEFAULT_IMAGE}
 
 SCRIPT_NAME=$(basename "$0")
