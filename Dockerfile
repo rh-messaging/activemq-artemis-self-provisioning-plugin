@@ -1,4 +1,4 @@
-FROM registry-proxy.engineering.redhat.com/rh-osbs/rhacm2-yarn-builder@sha256:a094f66b06cd1d5471059b923b00cb005748cb03b559e52a1cb2d4bc688050c5 AS build-image
+FROM registry.access.redhat.com/ubi9/nodejs-20:latest AS build-image
 
 ### BEGIN REMOTE SOURCE
 # Use the COPY instruction only inside the REMOTE SOURCE block
@@ -26,7 +26,7 @@ RUN yarn install --network-timeout 1000000
 ## Build application
 RUN yarn build
 
-FROM registry.access.redhat.com/ubi9/nginx-122@sha256:9b213588b4441508f0e0e43eadd95cd30cd507bddfe10b45477038f4ade17d2a
+FROM registry.access.redhat.com/ubi9/nginx-122:latest
 
 USER root
 
@@ -41,12 +41,7 @@ USER 1001
 ENTRYPOINT ["nginx", "-g", "daemon off;"]
 
 ## Labels
-LABEL name="amq-broker-8/amq-broker-80-self-provisioning-plugin-rhel9"
-LABEL description="Red Hat AMQ 8.0.0 Self Provisioning Plugin"
+LABEL name="arkmq-org/activemq-artemis-self-provisioning-plugin"
+LABEL description="ActiveMQ Artemis Self Provisioning Plugin"
 LABEL maintainer="Roderick Kieley <rkieley@redhat.com>"
-LABEL version="8.0.0"
-LABEL summary="Red Hat AMQ 8.0.0 Self Provisioning Plugin"
-LABEL amq.broker.version="8.0.0.OPR.1.SR1"
-LABEL com.redhat.component="amq-broker-self-provisioning-plugin-rhel9-container"
-LABEL io.k8s.display-name="Red Hat AMQ 8.0.0 Self Provisioning Plugin"
-LABEL io.openshift.tags="messaging,amq,integration"
+LABEL version="0.5.4"
