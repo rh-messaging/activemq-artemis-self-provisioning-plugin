@@ -1,25 +1,11 @@
 import { FC } from 'react';
-import {
-  Tabs,
-  Tab,
-  TabTitleText,
-  Title,
-  Divider,
-} from '@patternfly/react-core';
+import { Title, Divider } from '@patternfly/react-core';
 import { useTranslation } from '@app/i18n/i18n';
 import { BrokerDetailsBreadcrumb } from './components/BrokerDetailsBreadcrumb/BrokerDetailsBreadcrumb';
-import {
-  JolokiaAcceptorDetails,
-  JolokiaAddressDetails,
-  JolokiaBrokerDetails,
-  JolokiaQueueDetails,
-  JolokiaTestPanel,
-} from './components/JolokiaDevComponents';
 import { OverviewContainer } from './components/Overview/Overview.container';
 import { PodsContainer } from '@app/brokers/broker-details/components/broker-pods/PodsList.container';
 import { ResourcesContainer } from './components/Resources/Resources.container';
 import { useParams } from 'react-router-dom-v5-compat';
-import { JolokiaAuthentication } from '@app/jolokia/components/JolokiaAuthentication';
 import { useGetBrokerCR } from '@app/k8s/customHooks';
 import { BrokerCR } from '@app/k8s/types';
 import {
@@ -65,48 +51,6 @@ const AuthenticatedPageContent: FC<AuthenticatedPageContentPropType> = ({
     },
   ];
 
-  if (process.env.NODE_ENV === 'development') {
-    pages.push(
-      {
-        href: 'jolokiaTestPanel',
-        name: t('check-jolokia'),
-        component: () => <JolokiaTestPanel />,
-      },
-      {
-        href: 'jolokia-details',
-        name: t('jolokia-details'),
-        component: () => (
-          <Tabs defaultActiveKey={0}>
-            <Tab
-              eventKey={0}
-              title={<TabTitleText>{t('broker')}</TabTitleText>}
-            >
-              <JolokiaBrokerDetails />
-            </Tab>
-            <Tab
-              eventKey={1}
-              title={<TabTitleText>{t('addresses')}</TabTitleText>}
-            >
-              <JolokiaAddressDetails />
-            </Tab>
-            <Tab
-              eventKey={2}
-              title={<TabTitleText>{t('acceptors')}</TabTitleText>}
-            >
-              <JolokiaAcceptorDetails />
-            </Tab>
-            <Tab
-              eventKey={3}
-              title={<TabTitleText>{t('queues')}</TabTitleText>}
-            >
-              <JolokiaQueueDetails />
-            </Tab>
-          </Tabs>
-        ),
-      },
-    );
-  }
-
   return (
     <>
       <BrokerDetailsBreadcrumb name={name} namespace={namespace} />
@@ -135,13 +79,11 @@ export const BrokerDetailsPage: FC = () => {
 
   return (
     <>
-      <JolokiaAuthentication brokerCR={brokerCr} podOrdinal={0}>
-        <AuthenticatedPageContent
-          brokerCr={brokerCr}
-          name={name}
-          namespace={namespace}
-        />
-      </JolokiaAuthentication>
+      <AuthenticatedPageContent
+        brokerCr={brokerCr}
+        name={name}
+        namespace={namespace}
+      />
     </>
   );
 };
