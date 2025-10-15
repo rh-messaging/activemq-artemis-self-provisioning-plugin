@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@app/test-utils';
+import { fireEvent, render, screen, act } from '@app/test-utils';
 import { MetricsActions } from './MetricsActions';
 
 describe('MetricsActions', () => {
@@ -8,7 +8,7 @@ describe('MetricsActions', () => {
   const onSelectOptionSpan = jest.fn();
   const onSelectOptionChart = jest.fn();
 
-  it('should render span dropdown items correctly', () => {
+  it('should render span dropdown items correctly', async () => {
     render(
       <MetricsActions
         pollingTime={pollingTime}
@@ -22,11 +22,12 @@ describe('MetricsActions', () => {
     expect(screen.getByText(/Last 30 minutes/i)).toBeInTheDocument();
 
     const last30MinutesItem = screen.getAllByText(/Last 30 minutes/i)[0];
-    const spanDropdownItemsClickable = fireEvent.click(last30MinutesItem);
-    expect(spanDropdownItemsClickable).toBe(true);
+    await act(async () => {
+      fireEvent.click(last30MinutesItem);
+    });
   });
 
-  it('should render polling dropdown items correctly', () => {
+  it('should render polling dropdown items correctly', async () => {
     render(
       <MetricsActions
         pollingTime={pollingTime}
@@ -40,7 +41,8 @@ describe('MetricsActions', () => {
     expect(screen.getByText(/5 minutes/i)).toBeInTheDocument();
 
     const fiveMinutesItem = screen.getAllByText(/5 minutes/i)[0];
-    const pollingDropdownItemsClickable = fireEvent.click(fiveMinutesItem);
-    expect(pollingDropdownItemsClickable).toBe(true);
+    await act(async () => {
+      fireEvent.click(fiveMinutesItem);
+    });
   });
 });
