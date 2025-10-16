@@ -191,6 +191,20 @@ docker container and pass the locations to the console using BRIDGE_TLS_CERT_FIL
 BRIDGE_TLS_KEY_FILE environment variables respectively. Please see the `start-console-tls.sh`
 for details.
 
+##### Specifying a Console Version
+
+By default, the console will start with the `latest` version image. You can specify a different version by passing it as an argument to the `yarn start-console` or `yarn start-console-tls` commands. This is useful for testing compatibility with older console versions.
+
+For example, to run the console using version `4.16`:
+
+```sh
+yarn start-console 4.16
+# Or with TLS if required
+yarn start-console-tls 4.16
+```
+
+Supported versions can be found in the CI configuration file. This allows you to manually test the plugin's behavior on specific OpenShift releases.
+
 ### Trusting Self-Signed Certificates for WebSocket Hot Reloading
 
 When running the plugin in HTTPS mode with `yarn start-tls`, the webpack dev server uses self-signed certificates for both HTTP and WebSocket connections. While your browser may accept the certificate for regular HTTP requests, **WebSocket connections require explicit certificate trust**.
@@ -236,6 +250,97 @@ devServer: {
 ```
 
 The `client.webSocketURL` configuration explicitly tells the webpack dev server client where to connect for hot reloading updates, ensuring it uses the secure WebSocket protocol (`wss://`).
+
+## E2E Tests
+
+The project includes an end-to-end (E2E) test suite using **Playwright** to automate and validate its functionality in a realistic environment.
+
+### Prerequisites
+
+Before running the E2E tests, ensure you have the following set up:
+
+1.  **Running OpenShift Cluster**: You must have a local or remote OpenShift cluster running. See the [Setting up an OpenShift cluster](#setting-up-an-openshift-cluster) section for details.
+2.  **Operators Installed**: The `AMQ Broker` and `cert-manager` operators must be installed on the cluster.
+3.  **Authenticated `oc` CLI**: You must be logged into your cluster via the `oc` command line.
+4.  **Bridge Authentication**: The bridge authentication must be set up for HTTP (non-TLS). From the project root, run:
+    ```sh
+    cd bridge-auth-http && ./setup.sh && cd ..
+    ```
+5.  **Webpack Server**: The plugin's webpack server must be running in a terminal (non-TLS). From the project root, run:
+    ```sh
+    yarn start
+    ```
+
+### Setting the kubeadmin Password
+
+> [!IMPORTANT]
+> The test suite requires the `kubeadmin` password to be set as an environment variable. You can retrieve the password for your local CRC cluster by running:
+>
+> ```sh
+> crc console --credentials
+> ```
+>
+> Then, export the variable:
+>
+> ```sh
+> export KUBEADMIN_PASSWORD="<your-password>"
+> ```
+
+> [!NOTE]
+> Alternatively, you can set your CRC `kubeadmin` password to the default value `kubeadmin` so you don't have to export the environment variable. You can do this by running the following command before starting your CRC cluster:
+>
+> ```sh
+> crc config set kubeadmin-password kubeadmin
+> ```
+
+### Running the Test Suite Locally
+
+With all the prerequisites in place and the webpack server running, you can run the tests.
+
+1.  **Start the Console**: In a second terminal, start the OpenShift console.
+
+    ```sh
+    yarn start-console
+    ```
+
+2.  **Run Tests**: In a third terminal, choose one of the following options:
+
+- **Interactive Mode with UI** (recommended for development and debugging):
+
+  ```sh
+  KUBEADMIN_PASSWORD=kubeadmin yarn pw:ui
+  ```
+
+  Opens Playwright's UI Mode with a visual timeline, DOM snapshots, network inspection, and step-by-step debugging capabilities.
+
+- **Headed Mode** (browser visible, without UI):
+
+  ```sh
+  KUBEADMIN_PASSWORD=kubeadmin yarn pw:headed
+  ```
+
+  Runs tests with a visible browser window but without the interactive debugger.
+
+- **Headless Mode** (for CI or quick runs):
+  ```sh
+  KUBEADMIN_PASSWORD=kubeadmin yarn pw:test
+  ```
+  Runs tests in the terminal without opening a browser window.
+
+### Debugging Tests
+
+Playwright provides excellent debugging capabilities:
+
+1. **UI Mode** (Recommended): Use `yarn pw:ui` to get:
+
+   - Click on any action to see that exact state
+   - "Pick locator" tool to test selectors
+   - DOM snapshots, network, and console logs at each step
+   - Speed slider to slow down test execution
+
+2. **Inspector Mode**: Add `await page.pause()` in your test code, then run with `yarn pw:headed` to open the Playwright Inspector with step-over controls.
+
+3. **VSCode Debugging**: Set breakpoints in test files and use VSCode's debugger with the Playwright extension.
 
 ## Docker image
 
