@@ -191,6 +191,52 @@ docker container and pass the locations to the console using BRIDGE_TLS_CERT_FIL
 BRIDGE_TLS_KEY_FILE environment variables respectively. Please see the `start-console-tls.sh`
 for details.
 
+### Trusting Self-Signed Certificates for WebSocket Hot Reloading
+
+When running the plugin in HTTPS mode with `yarn start-tls`, the webpack dev server uses self-signed certificates for both HTTP and WebSocket connections. While your browser may accept the certificate for regular HTTP requests, **WebSocket connections require explicit certificate trust**.
+
+If you see WebSocket connection errors in the browser console (e.g., `Firefox can't establish a connection to the server at wss://localhost:9444/ws`), follow these steps:
+
+#### Trust the Certificate
+
+1. **Open a new browser tab**
+2. **Navigate directly to:** `https://localhost:9444`
+3. **Accept the security warning:**
+   - **Firefox**: Click "Advanced" → "Accept the Risk and Continue"
+   - **Chrome**: Click "Advanced" → "Proceed to localhost (unsafe)"
+4. **Return to your OpenShift console tab and refresh the page**
+
+The WebSocket connection should now work, and hot reloading will function correctly.
+
+#### WebSocket Configuration Details
+
+The `webpack.config.tls.ts` file includes the following configuration to enable secure WebSocket connections for hot module replacement:
+
+```javascript
+devServer: {
+  port: 9444,
+  host: '0.0.0.0',
+  https: {
+    key: path.resolve(__dirname, 'console-cert/domain.key'),
+    cert: path.resolve(__dirname, 'console-cert/domain.crt'),
+    ca: path.resolve(__dirname, 'console-cert/rootCA.crt'),
+  },
+  hot: true,
+  compress: true,
+  client: {
+    webSocketTransport: 'ws',
+    webSocketURL: {
+      hostname: 'localhost',
+      pathname: '/ws',
+      port: 9444,
+      protocol: 'wss',
+    },
+  },
+}
+```
+
+The `client.webSocketURL` configuration explicitly tells the webpack dev server client where to connect for hot reloading updates, ensuring it uses the secure WebSocket protocol (`wss://`).
+
 ## Docker image
 
 1. Build the image:
