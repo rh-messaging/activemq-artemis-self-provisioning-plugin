@@ -1,4 +1,4 @@
-import { fireEvent, render, waitForI18n } from '@app/test-utils';
+import { fireEvent, render, waitForI18n, act } from '@app/test-utils';
 import { DropdownWithToggle } from './DropdownWithToggle';
 
 describe('PreConfirmDeleteModal', () => {
@@ -46,10 +46,14 @@ describe('PreConfirmDeleteModal', () => {
     const dropdownToggle = comp.getByTestId('dropdown-toggle');
     expect(dropdownToggle).toBeInTheDocument();
 
-    fireEvent.click(dropdownToggle);
+    await act(async () => {
+      fireEvent.click(dropdownToggle);
+    });
 
     const selectDropdownItem = comp.getByText('last 15 minutes');
-    fireEvent.click(selectDropdownItem);
+    await act(async () => {
+      fireEvent.click(selectDropdownItem);
+    });
 
     expect(onSelectOption).toHaveBeenCalledWith('15m', undefined);
   });
