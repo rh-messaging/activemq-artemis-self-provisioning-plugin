@@ -6,4 +6,5 @@ storybook-static
 coverage
 tmp/
 server/
-
+test-results/
+playwright-report/
