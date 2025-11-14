@@ -86,6 +86,7 @@ export type Env = {
 
 export type BrokerCR = K8sResourceCommon & {
   spec?: {
+    restricted?: boolean;
     env?: Env[];
     ingressDomain?: string;
     connectors?: Connector[];

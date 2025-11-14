@@ -14,13 +14,14 @@ import {
 } from '@patternfly/react-core';
 import { FC, useContext } from 'react';
 import { ArtemisReducerOperations712 as ArtemisReducerOperations712 } from '@app/reducers/7.12/reducer';
-import { BrokerProperties } from './BrokerProperties/BrokerProperties';
+import { LegacyBrokerProperties } from './BrokerProperties/BrokerProperties';
 import { useTranslation } from '@app/i18n/i18n';
 import {
   ArtemisReducerGlobalOperations,
   BrokerCreationFormDispatch,
   BrokerCreationFormState,
 } from '@app/reducers/reducer';
+import { RestrictedSwitch } from './RestrictedSwitch';
 
 export const FormView: FC = () => {
   const { t } = useTranslation();
@@ -101,6 +102,9 @@ export const FormView: FC = () => {
                 plusBtnAriaLabel="plus"
               />
             </FormGroup>
+            <FormGroup label={t('Restricted mode')}>
+              <RestrictedSwitch />
+            </FormGroup>
             <FormGroup label={t('Broker Version')}>
               <InputGroup>
                 <InputGroupText id="broker-version" className=".pf-u-w-initial">
@@ -110,6 +114,7 @@ export const FormView: FC = () => {
                   value={formState.brokerVersion}
                   onChange={(_event, value: any) => onChangeVersion(value)}
                   aria-label="FormSelect Input"
+                  isDisabled={formState?.cr?.spec?.restricted}
                 >
                   {options.map((option, index) => (
                     <FormSelectOption
@@ -136,12 +141,14 @@ export const FormView: FC = () => {
         type="wizard"
         aria-label={t('broker configuration')}
       >
-        <BrokerProperties
-          brokerId={0}
-          perBrokerProperties={false}
-          crName={crName}
-          targetNs={targetNs}
-        />
+        {!formState.cr.spec.restricted && (
+          <LegacyBrokerProperties
+            brokerId={0}
+            perBrokerProperties={false}
+            crName={crName}
+            targetNs={targetNs}
+          />
+        )}
       </PageSection>
     </>
   );
