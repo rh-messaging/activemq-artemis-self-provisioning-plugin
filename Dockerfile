@@ -26,7 +26,7 @@ RUN yarn install --network-timeout 1000000
 ## Build application
 RUN yarn build
 
-FROM registry.access.redhat.com/ubi9/nginx-122@sha256:f7244ea367ae2e86a6a9b37bbfc078256b534709dd547d4e658b2ea75aebe22c
+FROM registry.access.redhat.com/ubi9/nginx-122@sha256:eaa57d7375f44b4de89442061a59d08355b63317a572eec91e1bcf622ffbc522
 
 USER root
 
