@@ -86,6 +86,7 @@ export type Env = {
 
 export type BrokerCR = K8sResourceCommon & {
   spec?: {
+    restricted?: boolean;
     env?: Env[];
     ingressDomain?: string;
     connectors?: Connector[];
@@ -163,4 +164,13 @@ export type Ingress = K8sResourceCommon & {
       };
     };
   };
+};
+
+export type ContainerStatus = {
+  name: string;
+  ready: boolean;
+  restartCount: number;
+  image?: string;
+  imageID?: string;
+  started?: boolean;
 };

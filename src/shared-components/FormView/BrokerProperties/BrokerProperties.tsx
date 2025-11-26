@@ -25,7 +25,7 @@ export type BrokerReplicasProp = {
   targetNs: string;
 };
 
-export const BrokerProperties: FC<BrokerIDProp> = ({
+export const LegacyBrokerProperties: FC<BrokerIDProp> = ({
   brokerId,
   perBrokerProperties,
 }) => {

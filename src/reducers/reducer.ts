@@ -1,18 +1,25 @@
 import { createContext } from 'react';
 import {
+  ArtemisReducerActions712,
   areMandatoryValuesSet712,
   newBroker712CR,
   reducer712 as reducer712,
 } from './7.12/reducer';
 import {
+  ArtemisReducerActions713,
   ArtemisReducerOperations713,
   areMandatoryValuesSet713,
   reducer713 as reducer713,
 } from './7.13/reducer';
+import {
+  ArtemisReducerActionsRestricted,
+  ArtemisReducerOperationsRestricted,
+  areMandatoryValuesSetRestricted,
+  reducerRestricted,
+} from './restricted/reducer';
 import { FormState712 } from './7.12/import-types';
 import { FormState713 } from './7.13/import-types';
-import { ArtemisReducerActions712 } from './7.12/reducer';
-import { ArtemisReducerActions713 } from './7.13/reducer';
+import { FormStateRestricted } from './restricted/import-types';
 import { BrokerCR } from '@app/k8s/types';
 
 export enum EditorType {
@@ -28,7 +35,7 @@ export interface BaseFormState {
   brokerVersion?: '7.12' | '7.13';
 }
 
-export type FormState = FormState712 | FormState713;
+export type FormState = FormState712 | FormState713 | FormStateRestricted;
 
 // Global operation start at number 0
 export enum ArtemisReducerGlobalOperations {
@@ -82,6 +89,7 @@ export const newArtemisCR = (namespace: string): FormState => {
 export type ReducerActions =
   | ArtemisReducerActions712
   | ArtemisReducerActions713
+  | ArtemisReducerActionsRestricted
   | SetEditorTypeAction
   | SetYamlHasUnsavedChanges
   | SetModelAction
@@ -98,6 +106,7 @@ export const artemisCrReducer: React.Reducer<FormState, ReducerActions> = (
   ) {
     formState.hasChanges = true;
   }
+  const ingressDomain = formState.cr.spec.ingressDomain;
   switch (action.operation) {
     case ArtemisReducerGlobalOperations.setBrokerVersion:
       formState.brokerVersion = action.payload;
@@ -124,6 +133,25 @@ export const artemisCrReducer: React.Reducer<FormState, ReducerActions> = (
       formState.yamlHasUnsavedChanges = false;
       formState.hasChanges = action.payload.isSetByUser;
       return formState;
+    case ArtemisReducerOperationsRestricted.setIsRestrited:
+      formState.cr = newArtemisCR(formState.cr.metadata.namespace).cr;
+      formState.cr.spec.ingressDomain = ingressDomain;
+      if (action.payload) {
+        delete formState.cr.spec.adminUser;
+        delete formState.cr.spec.adminPassword;
+        delete formState.cr.spec.console;
+        delete formState.cr.spec.deploymentPlan.image;
+        delete formState.cr.spec.deploymentPlan.requireLogin;
+        formState.brokerVersion = '7.13';
+      }
+      formState.cr.spec.restricted = action.payload;
+      return formState;
+  }
+  if (formState.cr.spec.restricted) {
+    return reducerRestricted(
+      formState as FormStateRestricted,
+      action as ArtemisReducerActionsRestricted,
+    );
   }
   switch (formState.brokerVersion) {
     case '7.13':
@@ -146,6 +174,8 @@ export const getBrokerVersion = (formState: FormState) => {
 
 export const areMandatoryValuesSet = (formState: FormState) => {
   return (
-    areMandatoryValuesSet712(formState) && areMandatoryValuesSet713(formState)
+    areMandatoryValuesSet712(formState) &&
+    areMandatoryValuesSet713(formState) &&
+    areMandatoryValuesSetRestricted(formState)
   );
 };
