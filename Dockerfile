@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9/nodejs-20:latest AS build-image
+FROM registry-proxy.engineering.redhat.com/rh-osbs/rhacm2-yarn-builder@sha256:824b4555d888fe5d8bb315ee42cad3d14e8fa73f32a9be084efe87907901f399 AS build-image
 
 ### BEGIN REMOTE SOURCE
 # Use the COPY instruction only inside the REMOTE SOURCE block
@@ -26,7 +26,7 @@ RUN yarn install --network-timeout 1000000
 ## Build application
 RUN yarn build
 
-FROM registry.access.redhat.com/ubi9/nginx-122:latest
+FROM registry.access.redhat.com/ubi9/nginx-122@sha256:a9dbd3a72c5049580aa4bcc651d02f41e6b84380563cc4cded2ead0cd747996e
 
 USER root
 
