@@ -41,7 +41,7 @@ USER 1001
 ENTRYPOINT ["nginx", "-g", "daemon off;"]
 
 ## Labels
-LABEL name="amq-broker-7/amq-broker-714-self-provisioing-plugin-rhel9"
+LABEL name="amq-broker-7/amq-broker-714-self-provisioning-plugin-rhel9"
 LABEL description="Red Hat AMQ 7.14.0 Self Provisioning Plugin"
 LABEL maintainer="Red Hat, Inc."
 LABEL version="7.14.0"
