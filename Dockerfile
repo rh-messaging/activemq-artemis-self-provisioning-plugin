@@ -42,11 +42,11 @@ ENTRYPOINT ["nginx", "-g", "daemon off;"]
 
 ## Labels
 LABEL name="amq-broker-7/amq-broker-713-self-provisioning-plugin-rhel9"
-LABEL description="Red Hat AMQ 7.13.3 Self Provisioning Plugin"
+LABEL description="Red Hat AMQ 7.13.4 Self Provisioning Plugin"
 LABEL maintainer="Roderick Kieley <rkieley@redhat.com>"
-LABEL version="7.13.3"
-LABEL summary="Red Hat AMQ 7.13.3 Self Provisioning Plugin"
-LABEL amq.broker.version="7.13.3.SPP.1.CR2"
+LABEL version="7.13.4"
+LABEL summary="Red Hat AMQ 7.13.4 Self Provisioning Plugin"
+LABEL amq.broker.version="7.13.4.SPP.1.CR1"
 LABEL com.redhat.component="amq-broker-self-provisioning-plugin-rhel9-container"
-LABEL io.k8s.display-name="Red Hat AMQ 7.13.3 Self Provisioning Plugin"
+LABEL io.k8s.display-name="Red Hat AMQ 7.13.4 Self Provisioning Plugin"
 LABEL io.openshift.tags="messaging,amq,integration"
