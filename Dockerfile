@@ -1,4 +1,4 @@
-FROM registry-proxy.engineering.redhat.com/rh-osbs/rhacm2-yarn-builder@sha256:181fbe2c5d28eb3b7581d2702930e05669937d2d5241ba29003cad898ab925e3 AS build-image
+FROM registry-proxy.engineering.redhat.com/rh-osbs/rhacm2-yarn-builder@sha256:9a2ae98ee0c7f1db762da7c4bbf44651c4b85cd2c1a1f14d539a9b93d3d1673a AS build-image
 
 ### BEGIN REMOTE SOURCE
 # Use the COPY instruction only inside the REMOTE SOURCE block
@@ -26,7 +26,7 @@ RUN yarn install --network-timeout 1000000
 ## Build application
 RUN yarn build
 
-FROM registry.access.redhat.com/ubi9/nginx-122@sha256:d228674d4715b60393a5e9f184326c7a8a519681a84914b6e8573f720d49a455
+FROM registry.access.redhat.com/ubi9/nginx-122@sha256:e43c8f9d87591e16bbb7d301c9abd1cbf1515e36f3ef9e73b0e08ec0aca3dcb1
 
 USER root
 
