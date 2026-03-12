@@ -75,12 +75,11 @@ jobs:
       - name: check strict mode for reducers/7.12
         run: |
           OUTPUT=$(yarn typecheck:7.12 2>&1 || true)
-          if echo "$OUTPUT" | grep -q "src/reducers/7.12/"; then
-            echo "$OUTPUT"
+          if echo "$OUTPUT" | grep -Eq "src/reducers/7.12/.*\.(ts|tsx).*error"; then
+            echo "$OUTPUT" | grep -E "src/reducers/7.12/.*\.(ts|tsx).*error"
             exit 1
-          else
-            echo ok
           fi
+          echo "✓ No type errors in src/reducers/7.12/"
 
       - name: Build project
         run: yarn run build
