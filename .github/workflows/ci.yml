@@ -228,7 +228,7 @@ jobs:
 
       - name: Install cert-manager
         run: |
-          oc apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.13.2/cert-manager.yaml
+          oc apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.20.0/cert-manager.yaml
           oc wait pod --all --for=condition=Ready --namespace=cert-manager --timeout=30m
 
       - name: Install trust-manager

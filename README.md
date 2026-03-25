@@ -92,11 +92,18 @@ cd activemq-artemis-operator
 
 ### Installing the cert-manager operator
 
-The plugin requires having access to the cert-manager operator for certain of its functionalities.
+The plugin requires having access to the cert-manager operator for certain of it's functionalities.
 
-#### From the operatorHub
+```
+```
+```
+kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.20.0/cert-manager.yaml
+```
+
+#### Alternatively from the operatorHub
 
 Navigate to the operatorHub on the console and search for `Cert-manager`.
+
 
 ### Installing trust-manager
 

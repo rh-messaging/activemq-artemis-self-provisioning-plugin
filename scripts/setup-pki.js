@@ -255,6 +255,34 @@ async function setupCompletePKI(prefix, operatorNamespace = 'default') {
   };
 }
 
+const OPERATOR_POD_LABEL = 'app.kubernetes.io/name=arkmq-org-broker-operator';
+
+/**
+ * Auto-detect the namespace where the ActiveMQ Artemis operator is running
+ * by querying for pods with the operator's well-known label.
+ *
+ * @param {string} [fallback='default'] - Namespace to return if detection fails
+ * @returns {Promise<string>} The detected operator namespace
+ */
+async function detectOperatorNamespace(fallback = 'default') {
+  try {
+    const { stdout } = await execAsync(
+      `kubectl get pods -A -l ${OPERATOR_POD_LABEL} -o jsonpath='{.items[0].metadata.namespace}'`,
+    );
+    const ns = stdout.trim().replace(/^'|'$/g, '');
+    if (ns) {
+      console.log(`✓ Detected operator namespace: ${ns}`);
+      return ns;
+    }
+  } catch (error) {
+    // Detection failed, fall through to fallback
+  }
+  console.log(
+    `⚠️  Could not detect operator namespace, falling back to "${fallback}"`,
+  );
+  return fallback;
+}
+
 module.exports = {
   applyYaml,
   waitForClusterIssuerReady,
@@ -262,5 +290,6 @@ module.exports = {
   createClusterInfrastructure,
   createTrustBundleAndOperatorCert,
   setupCompletePKI,
+  detectOperatorNamespace,
   execAsync,
 };

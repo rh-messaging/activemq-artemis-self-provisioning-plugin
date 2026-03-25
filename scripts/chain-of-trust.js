@@ -14,12 +14,12 @@
  *   cleanup   Remove PKI infrastructure
  *
  * Options:
- *   --namespace <name>    Target namespace for operator cert (default: "default")
+ *   --namespace <name>    Target namespace for operator cert (auto-detected from cluster if omitted)
  *   --prefix <name>       Prefix for resource names (default: "dev")
  *   --help                Show this help message
  */
 
-const { setupCompletePKI } = require('./setup-pki');
+const { setupCompletePKI, detectOperatorNamespace } = require('./setup-pki');
 const { exec } = require('child_process');
 const { promisify } = require('util');
 
@@ -28,7 +28,8 @@ const execAsync = promisify(exec);
 // Parse command line arguments
 const args = process.argv.slice(2);
 const command = args[0];
-let namespace = 'default';
+let namespace = null;
+let namespaceExplicit = false;
 let prefix = 'dev';
 
 function showHelp() {
@@ -47,7 +48,7 @@ Commands:
   cleanup   Remove PKI infrastructure
 
 Options:
-  --namespace <name>    Target namespace for operator cert (default: "default")
+  --namespace <name>    Target namespace for operator cert (auto-detected from cluster if omitted)
   --prefix <name>       Prefix for resource names (default: "dev")
   --help                Show this help message
 
@@ -67,6 +68,7 @@ Note: For aggressive test cleanup (including brokers and test namespaces),
 for (let i = 1; i < args.length; i++) {
   if (args[i] === '--namespace' && args[i + 1]) {
     namespace = args[i + 1];
+    namespaceExplicit = true;
     i++;
   } else if (args[i] === '--prefix' && args[i + 1]) {
     prefix = args[i + 1];
@@ -117,9 +119,22 @@ async function deleteSecretPattern(pattern) {
 }
 
 /**
+ * Resolve the operator namespace: use the explicit --namespace value if
+ * provided, otherwise auto-detect from the cluster.
+ */
+async function resolveNamespace() {
+  if (namespaceExplicit) {
+    return namespace;
+  }
+  return await detectOperatorNamespace('default');
+}
+
+/**
  * Setup function - creates PKI infrastructure
  */
 async function setup() {
+  namespace = await resolveNamespace();
+
   console.log('\n🔐 Setting up Chain of Trust for ActiveMQ Artemis\n');
   console.log(`Configuration:`);
   console.log(`  - Namespace: ${namespace}`);
@@ -169,6 +184,8 @@ async function setup() {
  * Cleanup function - removes PKI infrastructure
  */
 async function cleanup() {
+  namespace = await resolveNamespace();
+
   console.log('\n🧹 Cleaning up Chain of Trust Resources\n');
   console.log(`Configuration:`);
   console.log(`  - Namespace: ${namespace}`);
