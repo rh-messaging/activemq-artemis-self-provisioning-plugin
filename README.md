@@ -70,7 +70,7 @@ Navigate to the operatorHub on the console and search for: `Red Hat Integration 
 
 You can install the operator directly using Helm, which is the recommended method.
 ```bash
-helm install my-arkmq-org-broker-operator oci://quay.io/arkmq-org/helm-charts/arkmq-org-broker-operator --version 0.0.0-dev.latest
+helm install my-arkmq-org-broker-operator oci://quay.io/arkmq-org/helm-charts/arkmq-org-broker-operator --version 2.1.4
 ```
 
 
