@@ -3,6 +3,7 @@ import { promisify } from 'util';
 import {
   createClusterInfrastructure,
   createTrustBundleAndOperatorCert,
+  detectOperatorNamespace,
   waitForSecret,
 } from '../../scripts/setup-pki.js';
 
@@ -60,11 +61,12 @@ export async function createE2EClusterInfrastructure(): Promise<void> {
 export async function createE2ETrustBundleAndOperatorCert(
   namespace: string,
 ): Promise<void> {
-  // Create trust bundle and operator cert in the operator namespace (default)
+  const operatorNs = await detectOperatorNamespace('default');
+
   await createTrustBundleAndOperatorCert(
     'e2e-root-ca-secret',
     'e2e-ca-issuer',
-    'default',
+    operatorNs,
   );
 
   // Wait for the CA secret to appear in the broker namespace
@@ -79,9 +81,9 @@ export async function createE2ETrustBundleAndOperatorCert(
  */
 export async function cleanupE2EClusterInfrastructure(): Promise<void> {
   try {
-    // Use the cleanup command with e2e prefix
+    const operatorNs = await detectOperatorNamespace('default');
     await execAsync(
-      'node scripts/chain-of-trust.js cleanup --prefix e2e --namespace default',
+      `node scripts/chain-of-trust.js cleanup --prefix e2e --namespace ${operatorNs}`,
     );
   } catch (error) {
     console.warn('⚠️  Error during e2e cleanup');

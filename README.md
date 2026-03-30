@@ -1,6 +1,6 @@
 # ActiveMQ Artemis Self Provisioning Plugin
 
-This project is a ActiveMQ Artemis Self Provisioning Plugin to the Administrator perspective in OpenShift console. It requires at least OpenShift `4.18` to use and is compatible with OpenShift `4.19`.
+This project is a ActiveMQ Artemis Self Provisioning Plugin to the Administrator perspective in OpenShift console. It requires OpenShift at a version between `4.18` and `4.21`.
 
 ## Table of Contents
 
@@ -70,7 +70,7 @@ Navigate to the operatorHub on the console and search for: `Red Hat Integration 
 
 You can install the operator directly using Helm, which is the recommended method.
 ```bash
-helm install my-arkmq-org-broker-operator oci://quay.io/arkmq-org/helm-charts/arkmq-org-broker-operator --version 0.0.0-dev.latest
+helm install my-arkmq-org-broker-operator oci://quay.io/arkmq-org/helm-charts/arkmq-org-broker-operator --version 2.1.4
 ```
 
 
@@ -92,11 +92,18 @@ cd activemq-artemis-operator
 
 ### Installing the cert-manager operator
 
-The plugin requires having access to the cert-manager operator for certain of its functionalities.
+The plugin requires having access to the cert-manager operator for certain of it's functionalities.
 
-#### From the operatorHub
+```
+```
+```
+kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.20.0/cert-manager.yaml
+```
+
+#### Alternatively from the operatorHub
 
 Navigate to the operatorHub on the console and search for `Cert-manager`.
+
 
 ### Installing trust-manager
 

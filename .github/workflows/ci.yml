@@ -81,6 +81,15 @@ jobs:
           fi
           echo "✓ No type errors in src/reducers/7.12/"
 
+      - name: check strict mode for reducers/7.13
+        run: |
+          OUTPUT=$(yarn typecheck:7.13 2>&1 || true)
+          if echo "$OUTPUT" | grep -Eq "src/reducers/7.13/.*\.(ts|tsx).*error"; then
+            echo "$OUTPUT" | grep -E "src/reducers/7.13/.*\.(ts|tsx).*error"
+            exit 1
+          fi
+          echo "✓ No type errors in src/reducers/7.13/"
+
       - name: Build project
         run: yarn run build
 
@@ -219,7 +228,7 @@ jobs:
 
       - name: Install cert-manager
         run: |
-          oc apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.13.2/cert-manager.yaml
+          oc apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.20.0/cert-manager.yaml
           oc wait pod --all --for=condition=Ready --namespace=cert-manager --timeout=30m
 
       - name: Install trust-manager
@@ -234,7 +243,7 @@ jobs:
 
       - name: Install ActiveMQ Artemis Broker Operator
         run: |
-          helm install my-arkmq-org-broker-operator oci://quay.io/arkmq-org/helm-charts/arkmq-org-broker-operator --version 0.0.0-dev.latest
+          helm install my-arkmq-org-broker-operator oci://quay.io/arkmq-org/helm-charts/arkmq-org-broker-operator --version 2.1.4
           kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=arkmq-org-broker-operator -n default --timeout=30m
 
       - name: Set up Node.js
@@ -290,28 +299,6 @@ jobs:
           df -h
           echo "=== Ready for test runs ==="
 
-      - name: Run Playwright tests for console version 4.16
-        env:
-          KUBEADMIN_PASSWORD: ${{ steps.get_password.outputs.password }}
-        run: |
-          ./test_utils/prepare_env.sh
-          yarn start-console "4.16" &
-          ./test_utils/wait_console.sh
-          yarn pw:test
-          export CONSOLE_CONTAINER=$(docker ps -aq --filter ancestor=quay.io/openshift/origin-console:4.16)
-          ./test_utils/teardown.sh
-
-      - name: Run Playwright tests for console version 4.17
-        env:
-          KUBEADMIN_PASSWORD: ${{ steps.get_password.outputs.password }}
-        run: |
-          ./test_utils/prepare_env.sh
-          yarn start-console "4.17" &
-          ./test_utils/wait_console.sh
-          yarn pw:test
-          export CONSOLE_CONTAINER=$(docker ps -aq --filter ancestor=quay.io/openshift/origin-console:4.17)
-          ./test_utils/teardown.sh
-
       - name: Run Playwright tests for console version 4.18
         env:
           KUBEADMIN_PASSWORD: ${{ steps.get_password.outputs.password }}
@@ -332,6 +319,28 @@ jobs:
           ./test_utils/wait_console.sh
           yarn pw:test
           export CONSOLE_CONTAINER=$(docker ps -aq --filter ancestor=quay.io/openshift/origin-console:4.19)
+          ./test_utils/teardown.sh
+
+      - name: Run Playwright tests for console version 4.20
+        env:
+          KUBEADMIN_PASSWORD: ${{ steps.get_password.outputs.password }}
+        run: |
+          ./test_utils/prepare_env.sh
+          yarn start-console "4.20" &
+          ./test_utils/wait_console.sh
+          yarn pw:test
+          export CONSOLE_CONTAINER=$(docker ps -aq --filter ancestor=quay.io/openshift/origin-console:4.20)
+          ./test_utils/teardown.sh
+
+      - name: Run Playwright tests for console version 4.21
+        env:
+          KUBEADMIN_PASSWORD: ${{ steps.get_password.outputs.password }}
+        run: |
+          ./test_utils/prepare_env.sh
+          yarn start-console "4.21" &
+          ./test_utils/wait_console.sh
+          yarn pw:test
+          export CONSOLE_CONTAINER=$(docker ps -aq --filter ancestor=quay.io/openshift/origin-console:4.21)
           ./test_utils/teardown.sh
 
       - name: Upload Playwright test results on failure

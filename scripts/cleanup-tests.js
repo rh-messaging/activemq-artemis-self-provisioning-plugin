@@ -17,6 +17,7 @@
 
 const { exec } = require('child_process');
 const { promisify } = require('util');
+const { detectOperatorNamespace } = require('./setup-pki');
 
 const execAsync = promisify(exec);
 
@@ -68,6 +69,8 @@ async function cleanupTests() {
     'This will delete ALL brokers, certificates, and test resources!\n',
   );
 
+  const operatorNs = await detectOperatorNamespace('default');
+
   try {
     // 1. Delete all ActiveMQ Artemis brokers
     console.log('  Deleting all ActiveMQ Artemis brokers...');
@@ -99,13 +102,13 @@ async function cleanupTests() {
       'kubectl get bundles -o name | xargs -r kubectl delete --ignore-not-found=true || true',
     );
 
-    // 6. Delete operator resources in default namespace
-    console.log('  Deleting operator resources...');
+    // 6. Delete operator resources in detected operator namespace
+    console.log(`  Deleting operator resources from ${operatorNs}...`);
     await execAsync(
-      'kubectl delete certificate activemq-artemis-manager-cert -n default --ignore-not-found=true || true',
+      `kubectl delete certificate activemq-artemis-manager-cert -n ${operatorNs} --ignore-not-found=true || true`,
     );
     await execAsync(
-      'kubectl delete secret activemq-artemis-manager-cert -n default --ignore-not-found=true || true',
+      `kubectl delete secret activemq-artemis-manager-cert -n ${operatorNs} --ignore-not-found=true || true`,
     );
 
     // 7. Delete known secrets from all namespaces
