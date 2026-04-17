@@ -45,7 +45,7 @@ export const useCreateMonitoringResources = ({
     useState<MonitoringResourceStatus>();
   const reconcileRunRef = useRef(0);
   const prevSignatureRef = useRef<string>('');
-  const prevEnabledRef = useRef<boolean>(enabled);
+  const prevEnabledRef = useRef<boolean>(enabled ?? false);
 
   const updateStatus = useCallback(
     (
@@ -435,6 +435,9 @@ export const useCreateMonitoringResources = ({
                   },
                 },
                 commonName: 'prometheus',
+                privateKey: {
+                  rotationPolicy: 'Always',
+                },
                 issuerRef: {
                   name: 'dev-ca-issuer',
                   kind: 'ClusterIssuer',
@@ -470,6 +473,9 @@ export const useCreateMonitoringResources = ({
                 },
               },
               commonName: 'prometheus',
+              privateKey: {
+                rotationPolicy: 'Always',
+              },
               issuerRef: {
                 name: 'dev-ca-issuer',
                 kind: 'ClusterIssuer',
@@ -646,8 +652,8 @@ export const useCreateMonitoringResources = ({
     prevSignatureRef.current = signature;
     reconcileRunRef.current += 1;
     const wasEnabled = prevEnabledRef.current;
-    prevEnabledRef.current = enabled;
-    const forceRecreateCert = enabled && !wasEnabled;
+    prevEnabledRef.current = enabled ?? false;
+    const forceRecreateCert = (enabled ?? false) && !wasEnabled;
     void reconcile(reconcileRunRef.current, forceRecreateCert);
   }
 
