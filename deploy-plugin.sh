@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 
 TLS_ENABLED="true"
-DEFAULT_IMAGE=registry.redhat.io/amq-broker-8/amq-broker-80-self-provisioning-plugin-rhel9@sha256:ab9385b5d9536a9303c9c6ae06d4e7c52b8e112e64754c1d8b32d04400f6cb3d
+DEFAULT_IMAGE=registry.redhat.io/amq-broker-8/amq-broker-80-self-provisioning-plugin-rhel9@sha256:44e39edf4ae035ec5fb3eac78b7ac7244379c3034f9a2d0b52a8b54dedfd74dc
 PLUGIN_IMAGE=${DEFAULT_IMAGE}
 
 SCRIPT_NAME=$(basename "$0")
